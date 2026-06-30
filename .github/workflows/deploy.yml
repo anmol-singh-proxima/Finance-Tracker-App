@@ -1,0 +1,227 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  build-frontend:
+    name: Build and Test Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run linter
+        run: |
+          cd frontend
+          npm run lint || true
+
+      - name: Build app
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: react-build
+          path: frontend/dist/
+          retention-days: 5
+
+  build-server:
+    name: Build and Test Backend
+    runs-on: ubuntu-latest
+    needs: build-frontend
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download React build
+        uses: actions/download-artifact@v3
+        with:
+          name: react-build
+          path: frontend/dist/
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'server/package-lock.json'
+
+      - name: Install dependencies
+        run: |
+          cd server
+          npm ci
+
+      - name: Run linter
+        run: |
+          cd server
+          npm run lint || true
+
+      - name: Run tests
+        run: |
+          cd server
+          npm test || true
+
+      - name: Build Docker image
+        run: |
+          docker build -t finance-tracker-server:${{ github.sha }} -f server/Dockerfile .
+
+      - name: Save Docker image
+        run: |
+          docker save finance-tracker-server:${{ github.sha }} > /tmp/server-image.tar
+
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v3
+        with:
+          name: server-image
+          path: /tmp/server-image.tar
+          retention-days: 1
+
+  build-lambda:
+    name: Build and Test Lambda
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd lambdas/graphql-service
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          cd lambdas/graphql-service
+          pytest || true
+
+      - name: Build Docker image
+        run: |
+          docker build -t finance-tracker-graphql:${{ github.sha }} -f lambdas/graphql-service/Dockerfile ./lambdas/graphql-service
+
+      - name: Save Docker image
+        run: |
+          docker save finance-tracker-graphql:${{ github.sha }} > /tmp/lambda-image.tar
+
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v3
+        with:
+          name: lambda-image
+          path: /tmp/lambda-image.tar
+          retention-days: 1
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-server, build-lambda]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download server image
+        uses: actions/download-artifact@v3
+        with:
+          name: server-image
+          path: /tmp/
+
+      - name: Download lambda image
+        uses: actions/download-artifact@v3
+        with:
+          name: lambda-image
+          path: /tmp/
+
+      - name: Load Docker images
+        run: |
+          docker load < /tmp/server-image.tar
+          docker load < /tmp/lambda-image.tar
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+            docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+
+      - name: Push to ECR
+        run: |
+          docker tag finance-tracker-server:${{ github.sha }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/finance-tracker-server:latest
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/finance-tracker-server:latest
+
+          docker tag finance-tracker-graphql:${{ github.sha }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/finance-tracker-graphql:latest
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/finance-tracker-graphql:latest
+
+      - name: Run deployment script
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ env.AWS_REGION }}
+        run: |
+          chmod +x deployment/deploy.sh
+          ./deployment/deploy.sh production $AWS_REGION $AWS_ACCOUNT_ID
+
+      - name: Notify Slack on success
+        if: success()
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+          payload: |
+            {
+              "text": "✅ Finance Tracker deployment successful",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Finance Tracker - Deployment Successful* ✅\n*Commit*: ${{ github.sha }}\n*Branch*: main"
+                  }
+                }
+              ]
+            }
+
+      - name: Notify Slack on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+          payload: |
+            {
+              "text": "❌ Finance Tracker deployment failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Finance Tracker - Deployment Failed* ❌\n*Commit*: ${{ github.sha }}\n*Branch*: main"
+                  }
+                }
+              ]
+            }

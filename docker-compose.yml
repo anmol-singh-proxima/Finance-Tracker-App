@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # Node.js + React Frontend Server
+  app:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: finance-tracker-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - JWT_SECRET=dev-secret-key
+      - SESSION_SECRET=dev-session-secret
+      - GRAPHQL_LAMBDA_ENDPOINT=http://graphql:4000
+      - ALLOWED_DOMAIN=http://localhost:3000
+    depends_on:
+      - postgres
+      - graphql
+    networks:
+      - finance-network
+    volumes:
+      - ./server/src:/app/src
+    command: npm run dev
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: finance-tracker-db
+    environment:
+      - POSTGRES_USER=finance_user
+      - POSTGRES_PASSWORD=finance_password
+      - POSTGRES_DB=finance_tracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - finance-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finance_user -d finance_tracker"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # GraphQL Lambda Service (Local)
+  graphql:
+    build:
+      context: ./lambdas/graphql-service
+      dockerfile: Dockerfile
+    container_name: finance-tracker-graphql
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://finance_user:finance_password@postgres:5432/finance_tracker
+      - JWT_SECRET=dev-secret-key
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - finance-network
+    command: python -m uvicorn handler:app --host 0.0.0.0 --port 4000 --reload
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  finance-network:
+    driver: bridge
