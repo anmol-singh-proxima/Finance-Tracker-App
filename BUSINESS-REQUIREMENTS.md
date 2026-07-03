@@ -7,12 +7,12 @@
 
 ## Purpose of this document
 
-This file is the **single source of truth for *what the product must do* and *why***, expressed in business terms — no technology, no implementation. Every line of code in this repository must ultimately trace back to a requirement here (or to a technical requirement in [TECHNICAL_REQUIREMENTS.md](TECHNICAL_REQUIREMENTS.md)). If a change cannot be traced to a requirement, either the requirement is missing (add it here first) or the change does not belong.
+This file is the **single source of truth for *what the product must do* and *why***, expressed in business terms — no technology, no implementation. Every line of code in this repository must ultimately trace back to a requirement here (or to a technical requirement in [TECHNICAL-REQUIREMENTS.md](TECHNICAL-REQUIREMENTS.md)). If a change cannot be traced to a requirement, either the requirement is missing (add it here first) or the change does not belong.
 
 ## How to read the IDs
 
 Each requirement has a stable ID `BR-NN`. These IDs never change meaning or get reused; they are referenced from:
-- [TRACEABILITY_MATRIX.md](TRACEABILITY_MATRIX.md) — maps each `BR` to the architecture (`ARCH`) and implementation (`IMPL`) that satisfies it.
+- [TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md) — maps each `BR` to the architecture (`ARCH`) and implementation (`IMPL`) that satisfies it.
 - Code/PRs — every change cites the `BR`/`TR` it serves.
 
 **Priority** uses MoSCoW: **M** = Must (MVP), **S** = Should, **C** = Could (later).
@@ -52,7 +52,7 @@ A personal finance tracker that lets an individual record their day-to-day spend
 
 ## 3. Non-Functional Expectations (business-level)
 
-These are business-level expectations; their precise, testable form lives in [TECHNICAL_REQUIREMENTS.md](TECHNICAL_REQUIREMENTS.md).
+These are business-level expectations; their precise, testable form lives in [TECHNICAL-REQUIREMENTS.md](TECHNICAL-REQUIREMENTS.md).
 
 | ID | Expectation | Description |
 |----|-------------|-------------|
@@ -80,7 +80,7 @@ If any of these become required, add a new `BR-NN` here first, then propagate th
 ## 5. Change discipline
 
 1. Business needs change → **edit this file first** (add/modify a `BR`).
-2. Update [TRACEABILITY_MATRIX.md](TRACEABILITY_MATRIX.md) so the new/changed `BR` maps to architecture and implementation.
+2. Update [TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md) so the new/changed `BR` maps to architecture and implementation.
 3. Only then change code. Code without a `BR`/`TR` behind it should not be merged.
 
-**Related documents:** [TECHNICAL_REQUIREMENTS.md](TECHNICAL_REQUIREMENTS.md) · [updated_architecture.md](updated_architecture.md) · [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · [TRACEABILITY_MATRIX.md](TRACEABILITY_MATRIX.md) · [System-Prompt.md](System-Prompt.md)
+**Related documents:** [TECHNICAL-REQUIREMENTS.md](TECHNICAL-REQUIREMENTS.md) · [UPDATED-ARCHITECTURE.md](UPDATED-ARCHITECTURE.md) · [IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md) · [TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md) · [AI-CODING-AGENT-SYSTEM-PROMPT.md](AI-CODING-AGENT-SYSTEM-PROMPT.md)

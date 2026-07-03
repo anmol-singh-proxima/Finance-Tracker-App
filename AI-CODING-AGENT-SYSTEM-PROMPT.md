@@ -39,15 +39,15 @@ Business Requirement (BR) → Technical Requirement (TR) → Architecture (ARCH)
 
 The source-of-truth documents are:
 
-- **[BUSINESS_REQUIREMENTS.md](BUSINESS_REQUIREMENTS.md)** — what the product must do (`BR-*`).
-- **[TECHNICAL_REQUIREMENTS.md](TECHNICAL_REQUIREMENTS.md)** — the quality/security/
+- **[BUSINESS-REQUIREMENTS.md](BUSINESS-REQUIREMENTS.md)** — what the product must do (`BR-*`).
+- **[TECHNICAL-REQUIREMENTS.md](TECHNICAL-REQUIREMENTS.md)** — the quality/security/
   performance/standards bar (`TR-*`). The whole "Security", "Robustness", "Performance",
   and "Code quality" intent below is formalized and made testable there.
-- **[updated_architecture.md](updated_architecture.md)** — the target architecture
+- **[UPDATED-ARCHITECTURE.md](UPDATED-ARCHITECTURE.md)** — the target architecture
   (`ARCH-*`, catalogued in the matrix).
-- **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)** — the target code structure and
+- **[IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md)** — the target code structure and
   per-file responsibilities (`IMPL-*`).
-- **[TRACEABILITY_MATRIX.md](TRACEABILITY_MATRIX.md)** — the single place that links
+- **[TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md)** — the single place that links
   `BR ↔ TR ↔ ARCH ↔ IMPL ↔ files` in both directions.
 
 You must follow this discipline on **every** code change:

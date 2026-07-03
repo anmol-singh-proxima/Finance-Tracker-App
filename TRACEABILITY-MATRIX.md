@@ -15,13 +15,13 @@ If you change anything in that chain, you update this file in the **same** chang
 
 | Layer | ID prefix | Defined in |
 |-------|-----------|-----------|
-| Business requirements | `BR-*` | [BUSINESS_REQUIREMENTS.md](BUSINESS_REQUIREMENTS.md) |
-| Technical requirements | `TR-*` | [TECHNICAL_REQUIREMENTS.md](TECHNICAL_REQUIREMENTS.md) |
-| Architecture components | `ARCH-*` | catalog in [§1](#1-architecture-component-catalog) below; described in [updated_architecture.md](updated_architecture.md) |
-| Implementation units | `IMPL-*` | [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) |
+| Business requirements | `BR-*` | [BUSINESS-REQUIREMENTS.md](BUSINESS-REQUIREMENTS.md) |
+| Technical requirements | `TR-*` | [TECHNICAL-REQUIREMENTS.md](TECHNICAL-REQUIREMENTS.md) |
+| Architecture components | `ARCH-*` | catalog in [§1](#1-architecture-component-catalog) below; described in [UPDATED-ARCHITECTURE.md](UPDATED-ARCHITECTURE.md) |
+| Implementation units | `IMPL-*` | [IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md) |
 | Codebase | file paths | this repo |
 
-> **Note on ARCH IDs:** The architecture narrative lives in [updated_architecture.md](updated_architecture.md); the stable **ARCH IDs are catalogued here** (§1) so the architecture file can stay prose-readable while remaining referenceable. If the architecture changes, update §1 here and the matrices below.
+> **Note on ARCH IDs:** The architecture narrative lives in [UPDATED-ARCHITECTURE.md](UPDATED-ARCHITECTURE.md); the stable **ARCH IDs are catalogued here** (§1) so the architecture file can stay prose-readable while remaining referenceable. If the architecture changes, update §1 here and the matrices below.
 
 ---
 
@@ -29,7 +29,7 @@ If you change anything in that chain, you update this file in the **same** chang
 
 | ARCH ID | Component | Where in architecture |
 |---------|-----------|------------------------|
-| **ARCH-01** | Route 53 (DNS) | updated_architecture.md §2 |
+| **ARCH-01** | Route 53 (DNS) | UPDATED-ARCHITECTURE.md §2 |
 | **ARCH-02** | CloudFront distribution (TLS/ACM, edge cache, security headers/CSP) | §2, §5 |
 | **ARCH-03** | AWS WAF (managed rules, rate-based) | §2, §5 |
 | **ARCH-04** | S3 static origin (private, OAC) — SPA hosting | §2 |
@@ -48,7 +48,7 @@ If you change anything in that chain, you update this file in the **same** chang
 
 ## 2. Business Requirements → Architecture → Implementation
 
-| BR | Requirement (short) | ARCH | IMPL | Target code (per IMPLEMENTATION_PLAN) |
+| BR | Requirement (short) | ARCH | IMPL | Target code (per IMPLEMENTATION-PLAN) |
 |----|---------------------|------|------|----------------------------------------|
 | **BR-01** | Secure account & sign-in | ARCH-06 | IMPL-FE-01, IMPL-INF-04 | `frontend/src/auth/`, `infrastructure/auth/` |
 | **BR-02** | Record a daily expense | ARCH-05/07/09 | IMPL-FE-03, IMPL-BE-04, IMPL-BE-07 | `frontend/src/features/expenses/`, `backend/app/.../expenses.py`, `models/` |
@@ -124,7 +124,7 @@ If you change anything in that chain, you update this file in the **same** chang
 
 ## 4. Implementation → Codebase (reverse lookup)
 
-Use this to answer "what does this file serve?" before changing it. *Target paths (some not yet created — see migration order in IMPLEMENTATION_PLAN §7).*
+Use this to answer "what does this file serve?" before changing it. *Target paths (some not yet created — see migration order in IMPLEMENTATION-PLAN §7).*
 
 | IMPL | Target path(s) | Serves (BR/TR) |
 |------|----------------|----------------|
@@ -176,8 +176,8 @@ The existing code targets the **old** `ARCHITECTURE.md`. This shows where today'
 ## 6. How to use this matrix on every change
 
 1. **Before coding:** find the `BR`/`TR` you're serving. Trace forward to the `ARCH`/`IMPL`/files you'll touch (§2–§4).
-2. **While coding:** stay within the `IMPL` layer's responsibility (IMPLEMENTATION_PLAN §2–§4); meet the linked `TR` bars.
+2. **While coding:** stay within the `IMPL` layer's responsibility (IMPLEMENTATION-PLAN §2–§4); meet the linked `TR` bars.
 3. **After coding:** update any row here that changed (new file → add to §4; new component → §1; new requirement → upstream doc + §2/§3). Cite the IDs in the PR.
 4. **If something has no row:** stop. Add the missing requirement upstream first, or the change is out of scope.
 
-**Related documents:** [BUSINESS_REQUIREMENTS.md](BUSINESS_REQUIREMENTS.md) · [TECHNICAL_REQUIREMENTS.md](TECHNICAL_REQUIREMENTS.md) · [updated_architecture.md](updated_architecture.md) · [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · [System-Prompt.md](System-Prompt.md)
+**Related documents:** [BUSINESS-REQUIREMENTS.md](BUSINESS-REQUIREMENTS.md) · [TECHNICAL-REQUIREMENTS.md](TECHNICAL-REQUIREMENTS.md) · [UPDATED-ARCHITECTURE.md](UPDATED-ARCHITECTURE.md) · [IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md) · [AI-CODING-AGENT-SYSTEM-PROMPT.md](AI-CODING-AGENT-SYSTEM-PROMPT.md)

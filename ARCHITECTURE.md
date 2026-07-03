@@ -4,6 +4,17 @@
 **Date:** May 2026  
 **Version:** 1.0  
 
+> ⚠️ **SUPERSEDED — historical reference only.** This document describes the **original**
+> architecture (public API Gateway → ALB → ECS Node+React → GraphQL Lambda). It is **no
+> longer the target design**. The current target architecture is
+> **[UPDATED-ARCHITECTURE.md](UPDATED-ARCHITECTURE.md)** (serverless-first: CloudFront + S3
+> + API Gateway + Cognito + FastAPI Lambda + RDS).
+>
+> It is retained only because the **code currently in this repo still implements the design
+> described here**, until the migration in [IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md)
+> §7 is complete. For requirements and the requirement→architecture→code mapping, start at
+> [TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md). Do not build new work against this file.
+
 ---
 
 ## Table of Contents

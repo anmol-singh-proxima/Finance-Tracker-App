@@ -7,9 +7,9 @@
 
 ## Purpose of this document
 
-This file is the **single source of truth for *how the system must behave and be built*** — the quality, security, performance, reliability, and coding-standard bar that **all code in this repository must meet**, independent of any single feature. Where [BUSINESS_REQUIREMENTS.md](BUSINESS_REQUIREMENTS.md) says *what*, this file says *to what standard*.
+This file is the **single source of truth for *how the system must behave and be built*** — the quality, security, performance, reliability, and coding-standard bar that **all code in this repository must meet**, independent of any single feature. Where [BUSINESS-REQUIREMENTS.md](BUSINESS-REQUIREMENTS.md) says *what*, this file says *to what standard*.
 
-Every `TR` is **testable/verifiable** — written so that compliance can be checked by a tool, a test, or a reviewer. Each `TR` has a stable ID referenced from [TRACEABILITY_MATRIX.md](TRACEABILITY_MATRIX.md).
+Every `TR` is **testable/verifiable** — written so that compliance can be checked by a tool, a test, or a reviewer. Each `TR` has a stable ID referenced from [TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md).
 
 **Target compliance baseline:** OWASP **ASVS 5.0** (May 2025) **Level 2**, and the **OWASP Top 10 (2021)** fully addressed. See [References](#references).
 
@@ -70,7 +70,7 @@ Every `TR` is **testable/verifiable** — written so that compliance can be chec
 |----|-------------|--------------|
 | **TR-CQ-01** | **Python**: follows **PEP 8**; formatted and linted with **Ruff** (Black-compatible formatter + linter); **type hints** on all public functions, checked with **mypy** (strict). | `ruff check`, `ruff format --check`, `mypy` all pass in CI. |
 | **TR-CQ-02** | **JavaScript/TypeScript**: **TypeScript preferred**; linted with **ESLint** and formatted with **Prettier**, run **independently** (not via eslint-plugin-prettier). | `eslint` and `prettier --check` pass in CI. |
-| **TR-CQ-03** | Sound design applied **proportionally**: separation of concerns, single responsibility, clear layering (API → service → repository). **No over-engineering** — no speculative abstraction or premature generalization. The simplest design that fully solves the problem wins. | Code review against layering in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). |
+| **TR-CQ-03** | Sound design applied **proportionally**: separation of concerns, single responsibility, clear layering (API → service → repository). **No over-engineering** — no speculative abstraction or premature generalization. The simplest design that fully solves the problem wins. | Code review against layering in [IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md). |
 | **TR-CQ-04** | Commits follow **Conventional Commits**; changes are small, scoped, and reviewable; unrelated refactors are not bundled in. | Commit lint; PR size/scope review. |
 | **TR-CQ-05** | Automated tests exist for new/changed behavior: unit + integration, covering happy path **and** important edge cases. A coverage threshold is enforced. | CI runs tests; coverage gate met. |
 | **TR-CQ-06** | CI gates every merge on: lint, format check, type check, tests, **SCA (dependency vuln scan)**, and **secret scanning**. A red gate blocks merge. | CI config present and required. |
@@ -93,7 +93,7 @@ Every `TR` is **testable/verifiable** — written so that compliance can be chec
 
 | ID | Requirement | Verification |
 |----|-------------|--------------|
-| **TR-MNT-01** | Every code change is traceable to a `BR` and/or `TR` through [TRACEABILITY_MATRIX.md](TRACEABILITY_MATRIX.md). Code that serves no requirement is not merged. | PR references requirement ID(s); matrix updated. |
+| **TR-MNT-01** | Every code change is traceable to a `BR` and/or `TR` through [TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md). Code that serves no requirement is not merged. | PR references requirement ID(s); matrix updated. |
 | **TR-MNT-02** | The mapping **requirements → architecture → implementation → code** is kept **in sync**: any code change updates the affected requirement/architecture/plan/matrix docs in the same change set. | Reviewer confirms docs updated alongside code. |
 | **TR-MNT-03** | All infrastructure is defined as code (IaC); no manual console-only resources in production. | Infra reproducible from `infrastructure/`. |
 
@@ -112,18 +112,18 @@ Every `TR` is **testable/verifiable** — written so that compliance can be chec
 ## 8. How these requirements bind to the rest of the system
 
 ```
-BUSINESS_REQUIREMENTS (BR)  ─┐
-TECHNICAL_REQUIREMENTS (TR) ─┼─►  updated_architecture.md (ARCH)
+BUSINESS-REQUIREMENTS (BR)  ─┐
+TECHNICAL-REQUIREMENTS (TR) ─┼─►  UPDATED-ARCHITECTURE.md (ARCH)
                              │         │
                              │         ▼
-                             │   IMPLEMENTATION_PLAN.md (IMPL)
+                             │   IMPLEMENTATION-PLAN.md (IMPL)
                              │         │
                              │         ▼
                              └────►   Codebase (files)
-        all links recorded in TRACEABILITY_MATRIX.md
+        all links recorded in TRACEABILITY-MATRIX.md
 ```
 
-Change discipline: a quality/security/performance need changes → edit the relevant `TR` here → update [TRACEABILITY_MATRIX.md](TRACEABILITY_MATRIX.md) → reflect in architecture/plan/code. See [System-Prompt.md](System-Prompt.md) for the rules AI agents must follow on every change.
+Change discipline: a quality/security/performance need changes → edit the relevant `TR` here → update [TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md) → reflect in architecture/plan/code. See [AI-CODING-AGENT-SYSTEM-PROMPT.md](AI-CODING-AGENT-SYSTEM-PROMPT.md) for the rules AI agents must follow on every change.
 
 ---
 

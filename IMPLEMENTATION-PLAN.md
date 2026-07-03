@@ -2,7 +2,7 @@
 
 **Status:** Proposed (target state; not yet built)
 **Date:** July 2026
-**Implements:** [updated_architecture.md](updated_architecture.md) — Option A (Serverless-First)
+**Implements:** [UPDATED-ARCHITECTURE.md](UPDATED-ARCHITECTURE.md) — Option A (Serverless-First)
 **Audience:** Engineers and AI coding agents who will write the code
 
 ## Purpose of this document
@@ -10,8 +10,8 @@
 This is the **implementation-logic / planning layer** that sits between the architecture and the actual code. It defines **exactly what the target codebase should look like** for the updated (serverless-first) architecture: which folders exist, which files live in them, what each file is responsible for, and which architecture component (`ARCH`) and requirements (`BR`/`TR`) each one satisfies.
 
 Read this with:
-- [updated_architecture.md](updated_architecture.md) — the architecture being implemented.
-- [TRACEABILITY_MATRIX.md](TRACEABILITY_MATRIX.md) — the full `BR → TR → ARCH → IMPL → code` mapping.
+- [UPDATED-ARCHITECTURE.md](UPDATED-ARCHITECTURE.md) — the architecture being implemented.
+- [TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md) — the full `BR → TR → ARCH → IMPL → code` mapping.
 
 > **Important:** The *current* repo (`server/`, `lambdas/graphql-service/`, `frontend/`) is built against the **old** `ARCHITECTURE.md`. This plan describes the **target** structure. Do not delete the old code as part of reading this; migration order is in [§7](#7-migration-order).
 
@@ -30,12 +30,12 @@ Each implementation unit has a stable ID `IMPL-<LAYER>-NN`:
 ```
 finance-tracker-app/
 │
-├── BUSINESS_REQUIREMENTS.md         # what the product must do (BR)
-├── TECHNICAL_REQUIREMENTS.md        # the quality/security/perf bar (TR)
-├── updated_architecture.md          # target architecture (ARCH)
-├── IMPLEMENTATION_PLAN.md           # this file (IMPL)
-├── TRACEABILITY_MATRIX.md           # BR→TR→ARCH→IMPL→code mapping
-├── System-Prompt.md                 # rules for AI coding agents
+├── BUSINESS-REQUIREMENTS.md         # what the product must do (BR)
+├── TECHNICAL-REQUIREMENTS.md        # the quality/security/perf bar (TR)
+├── UPDATED-ARCHITECTURE.md          # target architecture (ARCH)
+├── IMPLEMENTATION-PLAN.md           # this file (IMPL)
+├── TRACEABILITY-MATRIX.md           # BR→TR→ARCH→IMPL→code mapping
+├── AI-CODING-AGENT-SYSTEM-PROMPT.md                 # rules for AI coding agents
 │
 ├── frontend/                        # React SPA — built, shipped to S3 (ARCH-04)
 │   ├── src/
@@ -197,7 +197,7 @@ The current code (`server/`, `lambdas/graphql-service/`, `frontend/`) targets th
 4. **Cutover:** point Route 53 at CloudFront (IMPL-INF-02); decommission ECS/ALB and the old `server/`.
 5. **Decommission** old `lambdas/graphql-service/` once parity is verified.
 
-Each step: update [TRACEABILITY_MATRIX.md](TRACEABILITY_MATRIX.md) so `IMPL → code` reflects reality.
+Each step: update [TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md) so `IMPL → code` reflects reality.
 
 ---
 
@@ -206,7 +206,7 @@ Each step: update [TRACEABILITY_MATRIX.md](TRACEABILITY_MATRIX.md) so `IMPL → 
 A change is done only when:
 - It traces to at least one `BR`/`TR` (cited in the PR) — TR-MNT-01.
 - It meets the relevant `TR` quality/security/performance bars (CI green) — TR-CQ-06.
-- [TRACEABILITY_MATRIX.md](TRACEABILITY_MATRIX.md) and any affected requirement/architecture/plan docs are updated in the same change — TR-MNT-02.
+- [TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md) and any affected requirement/architecture/plan docs are updated in the same change — TR-MNT-02.
 - Tests cover happy path + edge cases — TR-CQ-05.
 
-**Related documents:** [BUSINESS_REQUIREMENTS.md](BUSINESS_REQUIREMENTS.md) · [TECHNICAL_REQUIREMENTS.md](TECHNICAL_REQUIREMENTS.md) · [updated_architecture.md](updated_architecture.md) · [TRACEABILITY_MATRIX.md](TRACEABILITY_MATRIX.md) · [System-Prompt.md](System-Prompt.md)
+**Related documents:** [BUSINESS-REQUIREMENTS.md](BUSINESS-REQUIREMENTS.md) · [TECHNICAL-REQUIREMENTS.md](TECHNICAL-REQUIREMENTS.md) · [UPDATED-ARCHITECTURE.md](UPDATED-ARCHITECTURE.md) · [TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md) · [AI-CODING-AGENT-SYSTEM-PROMPT.md](AI-CODING-AGENT-SYSTEM-PROMPT.md)
