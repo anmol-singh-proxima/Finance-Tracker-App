@@ -128,14 +128,14 @@ Use this to answer "what does this file serve?" before changing it. *Target path
 
 | IMPL | Target path(s) | Serves (BR/TR) | Status |
 |------|----------------|----------------|--------|
-| IMPL-FE-01 | `frontend/src/auth/` | BR-01, BR-13, TR-SEC-01/14 | Target only |
-| IMPL-FE-02 | `frontend/src/api/client.ts` | BR-15, TR-SEC-10, TR-REL-02 | Target only |
-| IMPL-FE-03 | `frontend/src/features/expenses/` | BR-02/03/10/11, TR-SEC-04 | Target only |
-| IMPL-FE-04 | `frontend/src/features/investments/` | BR-04/11 | Target only |
-| IMPL-FE-05 | `frontend/src/features/dashboard/`, `pages/Dashboard.tsx` | BR-05/06/07 | Target only |
-| IMPL-FE-06 | `frontend/src/charts/` | BR-08/09, TR-PERF-02 | Target only |
-| IMPL-FE-07 | `frontend/src/components/Filters/` | BR-10 | Target only |
-| IMPL-FE-08 | `frontend/src/store/` | BR-* state | Target only |
+| IMPL-FE-01 | `frontend/src/auth/cognito.ts` | BR-01, BR-13, TR-SEC-01/14 | **Implemented (Phase 2)** |
+| IMPL-FE-02 | `frontend/src/api/client.ts` (+ `api/*.ts`, `api/mappers.ts`) | BR-15, TR-SEC-10, TR-REL-02 | **Implemented (Phase 2)** |
+| IMPL-FE-03 | `frontend/src/pages/Expenses.tsx`, `api/expenses.ts`, `store/slices/expenseSlice.ts` | BR-02/03/10/11, TR-SEC-04 | **Implemented (Phase 2)** — realised in `pages/` not `features/` (see plan note) |
+| IMPL-FE-04 | `frontend/src/pages/Investments.tsx`, `api/investments.ts`, `store/slices/investmentSlice.ts` | BR-04/11 | **Implemented (Phase 2)** — `pages/` not `features/` |
+| IMPL-FE-05 | `frontend/src/pages/Dashboard.tsx`, `api/dashboard.ts` | BR-05/06/07 | **Implemented (Phase 2)** |
+| IMPL-FE-06 | `frontend/src/charts/` | BR-08/09, TR-PERF-02 | **Implemented (Phase 2)** |
+| IMPL-FE-07 | `frontend/src/components/Filters/` | BR-10 | **Implemented (Phase 2)** — expenses filter bar |
+| IMPL-FE-08 | `frontend/src/store/` | BR-* state | **Implemented (Phase 2)** |
 | IMPL-BE-01 | `backend/app/main.py` | ARCH-07, TR-REL-02, TR-PERF-06 | **Implemented (Phase 1)** |
 | IMPL-BE-02 | `backend/app/core/config.py` | TR-SEC-03, TR-CQ-08 | **Implemented (Phase 1)** |
 | IMPL-BE-03 | `backend/app/core/security.py`, `backend/app/api/deps.py` | TR-SEC-02, BR-13, TR-DAT-01 | **Implemented (Phase 1)** — see IMPLEMENTATION-PLAN.md §3 note (deviation #2: full JWKS verification, not passthrough) |
@@ -165,7 +165,7 @@ The existing code targets the **old** `ARCHITECTURE.md`. This shows where today'
 
 | Current file/area | Old role | Target IMPL | Fate |
 |-------------------|----------|-------------|------|
-| `frontend/` (Vite SPA) | React UI served by Node | IMPL-FE-* | **Keep**, retarget to S3/CloudFront + Cognito |
+| `frontend/` (Vite SPA) | React UI served by Node | IMPL-FE-* | **Retargeted (Phase 2)** — converted to TypeScript, now authenticates via Cognito and calls the new `backend/` `/api/*` (dev proxy → :8000). Still built by Vite; S3/CloudFront hosting is Phase 3. The old Express `/api/auth/*` + JWT dependency is gone. |
 | `server/src/app.js` (static serving) | Express serves SPA | IMPL-INF-02/03 | **Remove** (CloudFront/S3 replace it) |
 | `server/src/routes/*` (API) | REST/GraphQL proxy | IMPL-BE-04/05/06 | Replacement (`backend/app/api/routers/`) now exists and is runnable standalone (Phase 1). `server/src/routes/*` itself is **untouched** — still serving live traffic. Cutover/removal is Phase 2–4, once the frontend points at `backend/` and parity is verified. |
 | `server/src/middleware/auth.js` | hand-rolled JWT | IMPL-BE-03 + ARCH-06 | Replacement (`backend/app/core/security.py`, real Cognito JWKS verification) now exists. `server/src/middleware/auth.js` is **untouched** — still in use by the old stack. Cutover is Phase 2–4. |

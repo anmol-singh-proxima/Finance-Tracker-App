@@ -36,20 +36,26 @@ Note the returned `Id` (e.g. `us-east-1_AbCdEfGhI`) — this is `COGNITO_USER_PO
 ## 2. Create an App Client
 
 A public client (no secret) is fine — `core/security.py` only checks the
-`client_id` claim, regardless of whether the client type has a secret.
-`ALLOW_USER_PASSWORD_AUTH` lets you get a real token via the CLI for manual
-testing below, without standing up a Hosted UI (that's a Phase 2 concern).
+`client_id` claim, regardless of whether the client type has a secret. Auth
+flows enabled:
+- `ALLOW_USER_SRP_AUTH` — used by the **frontend SPA** (Phase 2). The
+  `amazon-cognito-identity-js` library authenticates via SRP, so the raw
+  password never leaves the browser.
+- `ALLOW_USER_PASSWORD_AUTH` — lets you get a token via the CLI for manual
+  backend testing below (`initiate-auth USER_PASSWORD_AUTH`).
+- `ALLOW_REFRESH_TOKEN_AUTH` — token refresh.
 
 ```bash
 aws cognito-idp create-user-pool-client \
   --user-pool-id <POOL_ID_FROM_STEP_1> \
   --client-name finance-tracker-spa-local \
   --no-generate-secret \
-  --explicit-auth-flows ALLOW_USER_PASSWORD_AUTH ALLOW_REFRESH_TOKEN_AUTH \
+  --explicit-auth-flows ALLOW_USER_SRP_AUTH ALLOW_USER_PASSWORD_AUTH ALLOW_REFRESH_TOKEN_AUTH \
   --region us-east-1
 ```
 
-Note the returned `ClientId` — this is `COGNITO_APP_CLIENT_ID`.
+Note the returned `ClientId` — this is `COGNITO_APP_CLIENT_ID` (backend) and
+`VITE_COGNITO_CLIENT_ID` (frontend — see `frontend/.env.example`).
 
 ## 3. Create a test user
 

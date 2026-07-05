@@ -121,6 +121,14 @@ finance-tracker-app/
 
 **Frontend standards (TR-CQ-02):** TypeScript; ESLint + Prettier run independently; never bypass React auto-escaping (no unsanitized `dangerouslySetInnerHTML`, supports TR-SEC-06).
 
+> **Phase 2 status:** the frontend is implemented (IMPL-FE-01 through IMPL-FE-08) — converted to TypeScript, authenticating via Cognito (`amazon-cognito-identity-js`) and calling the new `backend/` `/api/*`. The old Express `/api/auth/*` + hand-rolled JWT flow is gone. `server/` and `lambdas/graphql-service/` remain in the repo untouched (decommission is Phase 4). S3/CloudFront hosting (IMPL-INF-02/03) is Phase 3; the dev Vite proxy points at the backend on `:8000`. See `TRACEABILITY-MATRIX.md` §4/§5.
+>
+> **Phase 2 deviations from this section (documented per TR-MNT-02):**
+> - **`pages/` instead of a separate `features/` layer** for IMPL-FE-03/04/05. For three screens, a `features/<domain>/` split on top of `pages/` would be premature structure (TR-CQ-03). Screen components live in `pages/`; the domain's I/O and state live in `api/*` and `store/slices/*`.
+> - **Token storage in localStorage, not "in memory"** (the IMPL-FE-01 row's note). This is the `amazon-cognito-identity-js` default and is needed for session persistence across reloads; the XSS exposure is mitigated by React auto-escaping (no unsanitised HTML) and the CloudFront CSP in Phase 3 (TR-SEC-06). Access tokens are never logged (TR-SEC-10).
+> - **New charts (IMPL-FE-06, BR-08/09) and filters (IMPL-FE-07, BR-10)** are now built, since the backend exposes `/dashboard/trends`, `/dashboard/breakdown`, and list-filter params — these Must-priority BRs were unmet by the old UI.
+> - Requires the Cognito App Client to allow **`ALLOW_USER_SRP_AUTH`** (SRP is what the browser SDK uses); `backend/README.md`'s client-creation command was updated to include it.
+
 ---
 
 ## 3. Backend (FastAPI on Lambda) — `backend/`
@@ -197,8 +205,9 @@ All tables carry `user_id`; **every** repository query filters by the authentica
 
 The current code (`server/`, `lambdas/graphql-service/`, `frontend/`) targets the old `ARCHITECTURE.md`. Migrate incrementally:
 
-1. **Auth:** stand up Cognito (IMPL-INF-04); add `src/auth/` (IMPL-FE-01); remove hand-rolled JWT/bcrypt/session usage. *(closes TR-SEC-01/03/14 and the current token-validation gap)*
+1. **Auth (Phase 1 backend + Phase 2 frontend — done):** stand up Cognito (IMPL-INF-04); add `src/auth/` (IMPL-FE-01); remove hand-rolled JWT/bcrypt/session usage. *(closes TR-SEC-01/03/14 and the current token-validation gap)* The frontend now signs in through Cognito and the backend verifies those tokens; the old Express auth is no longer used by the SPA. Creating the actual Cognito pool is still a manual user step (see `backend/README.md`).
 2. **Backend (Phase 1 — done):** create `backend/` FastAPI app (IMPL-BE-*) replacing `server/` API routes and `lambdas/graphql-service/`; move data to RDS behind RDS Proxy. Port endpoints REST-first (or keep GraphQL only if justified + add depth limits). `backend/` now exists and is runnable standalone (`docker-compose up backend postgres`, real Postgres, real Cognito JWT verification) — `server/` and `lambdas/graphql-service/` are untouched and still running in parallel; this step does not yet cut traffic over to the new backend, that's Phase 2–4.
+   **Phase 2 (frontend — done):** the SPA is now TypeScript, authenticates via Cognito, and calls the new backend's `/api/*` (dev proxy → `:8000`). Charts (BR-08/09) and filters (BR-10) added. `server/`/`lambdas/` untouched.
 3. **Edge/hosting:** provision S3 + CloudFront + WAF (IMPL-INF-02/03); change the SPA to call `/api/*` via CloudFront; stop serving React from Node.
 4. **Cutover:** point Route 53 at CloudFront (IMPL-INF-02); decommission ECS/ALB and the old `server/`.
 5. **Decommission** old `lambdas/graphql-service/` once parity is verified.
