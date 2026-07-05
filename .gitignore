@@ -37,6 +37,9 @@ MANIFEST
 .pytest_cache/
 .coverage
 htmlcov/
+.venv/
+.mypy_cache/
+.ruff_cache/
 
 # React
 frontend/dist/

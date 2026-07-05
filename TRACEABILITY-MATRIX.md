@@ -126,50 +126,50 @@ If you change anything in that chain, you update this file in the **same** chang
 
 Use this to answer "what does this file serve?" before changing it. *Target paths (some not yet created — see migration order in IMPLEMENTATION-PLAN §7).*
 
-| IMPL | Target path(s) | Serves (BR/TR) |
-|------|----------------|----------------|
-| IMPL-FE-01 | `frontend/src/auth/` | BR-01, BR-13, TR-SEC-01/14 |
-| IMPL-FE-02 | `frontend/src/api/client.ts` | BR-15, TR-SEC-10, TR-REL-02 |
-| IMPL-FE-03 | `frontend/src/features/expenses/` | BR-02/03/10/11, TR-SEC-04 |
-| IMPL-FE-04 | `frontend/src/features/investments/` | BR-04/11 |
-| IMPL-FE-05 | `frontend/src/features/dashboard/`, `pages/Dashboard.tsx` | BR-05/06/07 |
-| IMPL-FE-06 | `frontend/src/charts/` | BR-08/09, TR-PERF-02 |
-| IMPL-FE-07 | `frontend/src/components/Filters/` | BR-10 |
-| IMPL-FE-08 | `frontend/src/store/` | BR-* state |
-| IMPL-BE-01 | `backend/app/main.py` | ARCH-07, TR-REL-02, TR-PERF-06 |
-| IMPL-BE-02 | `backend/app/core/config.py` | TR-SEC-03, TR-CQ-08 |
-| IMPL-BE-03 | `backend/app/core/security.py`, `backend/app/api/deps.py` | TR-SEC-02, BR-13, TR-DAT-01 |
-| IMPL-BE-04 | `backend/app/api/routers/expenses.py`, `services/expense_service.py`, `repositories/expense_repo.py` | BR-02/03/05/10/11, TR-PERF-04 |
-| IMPL-BE-05 | `backend/app/api/routers/investments.py`, `services/investment_service.py`, `repositories/investment_repo.py` | BR-04/06/11 |
-| IMPL-BE-06 | `backend/app/api/routers/dashboard.py`, `services/analytics_service.py` | BR-07/08/09, TR-PERF-03/05 |
-| IMPL-BE-07 | `backend/app/models/`, `backend/app/db/migrations/` | ARCH-09, TR-DAT-03 |
-| IMPL-BE-08 | `backend/app/db/session.py` | ARCH-08, TR-PERF-03, TR-REL-06 |
-| IMPL-BE-09 | `backend/app/schemas/` | TR-SEC-04, TR-PERF-04 |
-| IMPL-BE-10 | `backend/app/core/logging.py`, `backend/app/core/errors.py` | TR-OBS-01, TR-REL-02, TR-SEC-10/13 |
-| IMPL-BE-11 | `backend/app/api/routers/categories.py`, `services/category_service.py` | BR-03/12 |
-| IMPL-INF-01 | `infrastructure/network/` | ARCH-12, TR-SEC-09, TR-REL-04 |
-| IMPL-INF-02 | `infrastructure/edge/` | ARCH-01/02/03, TR-SEC-06/07/08, TR-PERF-01 |
-| IMPL-INF-03 | `infrastructure/storage/` | ARCH-04, TR-PERF-01 |
-| IMPL-INF-04 | `infrastructure/auth/` | ARCH-06, TR-SEC-01/02/14 |
-| IMPL-INF-05 | `infrastructure/api/` | ARCH-05/07, TR-SEC-02 |
-| IMPL-INF-06 | `infrastructure/data/` | ARCH-08/09/10, TR-SEC-03/12, TR-REL-04/05 |
-| IMPL-INF-07 | `infrastructure/observability/` | ARCH-11, TR-OBS-* |
-| IMPL-CI-01 | `.github/workflows/ci.yml` | TR-CQ-01/02/05/06, TR-SEC-11 |
-| IMPL-CI-02 | `.github/workflows/deploy.yml` | ARCH-13/14, TR-REL-01 |
+| IMPL | Target path(s) | Serves (BR/TR) | Status |
+|------|----------------|----------------|--------|
+| IMPL-FE-01 | `frontend/src/auth/` | BR-01, BR-13, TR-SEC-01/14 | Target only |
+| IMPL-FE-02 | `frontend/src/api/client.ts` | BR-15, TR-SEC-10, TR-REL-02 | Target only |
+| IMPL-FE-03 | `frontend/src/features/expenses/` | BR-02/03/10/11, TR-SEC-04 | Target only |
+| IMPL-FE-04 | `frontend/src/features/investments/` | BR-04/11 | Target only |
+| IMPL-FE-05 | `frontend/src/features/dashboard/`, `pages/Dashboard.tsx` | BR-05/06/07 | Target only |
+| IMPL-FE-06 | `frontend/src/charts/` | BR-08/09, TR-PERF-02 | Target only |
+| IMPL-FE-07 | `frontend/src/components/Filters/` | BR-10 | Target only |
+| IMPL-FE-08 | `frontend/src/store/` | BR-* state | Target only |
+| IMPL-BE-01 | `backend/app/main.py` | ARCH-07, TR-REL-02, TR-PERF-06 | **Implemented (Phase 1)** |
+| IMPL-BE-02 | `backend/app/core/config.py` | TR-SEC-03, TR-CQ-08 | **Implemented (Phase 1)** |
+| IMPL-BE-03 | `backend/app/core/security.py`, `backend/app/api/deps.py` | TR-SEC-02, BR-13, TR-DAT-01 | **Implemented (Phase 1)** — see IMPLEMENTATION-PLAN.md §3 note (deviation #2: full JWKS verification, not passthrough) |
+| IMPL-BE-04 | `backend/app/api/routers/expenses.py`, `services/expense_service.py`, `repositories/expense_repo.py` | BR-02/03/05/10/11, TR-PERF-04 | **Implemented (Phase 1)** |
+| IMPL-BE-05 | `backend/app/api/routers/investments.py`, `services/investment_service.py`, `repositories/investment_repo.py` | BR-04/06/11 | **Implemented (Phase 1)** |
+| IMPL-BE-06 | `backend/app/api/routers/dashboard.py`, `services/analytics_service.py` | BR-07/08/09, TR-PERF-03/05 | **Implemented (Phase 1)** |
+| IMPL-BE-07 | `backend/app/models/`, `backend/app/db/migrations/` | ARCH-09, TR-DAT-03 | **Implemented (Phase 1)** — see IMPLEMENTATION-PLAN.md §3 note (deviation #1: no local `users` table) |
+| IMPL-BE-08 | `backend/app/db/session.py` | ARCH-08, TR-PERF-03, TR-REL-06 | **Implemented (Phase 1)** |
+| IMPL-BE-09 | `backend/app/schemas/` | TR-SEC-04, TR-PERF-04 | **Implemented (Phase 1)** |
+| IMPL-BE-10 | `backend/app/core/logging.py`, `backend/app/core/errors.py` | TR-OBS-01, TR-REL-02, TR-SEC-10/13 | **Implemented (Phase 1)** |
+| IMPL-BE-11 | `backend/app/api/routers/categories.py`, `services/category_service.py` | BR-03/12 | **Implemented (Phase 1)** — categories only; Budget/BR-12 sub-scope remains out of scope |
+| IMPL-INF-01 | `infrastructure/network/` | ARCH-12, TR-SEC-09, TR-REL-04 | Target only |
+| IMPL-INF-02 | `infrastructure/edge/` | ARCH-01/02/03, TR-SEC-06/07/08, TR-PERF-01 | Target only |
+| IMPL-INF-03 | `infrastructure/storage/` | ARCH-04, TR-PERF-01 | Target only |
+| IMPL-INF-04 | `infrastructure/auth/` | ARCH-06, TR-SEC-01/02/14 | Target only |
+| IMPL-INF-05 | `infrastructure/api/` | ARCH-05/07, TR-SEC-02 | Target only |
+| IMPL-INF-06 | `infrastructure/data/` | ARCH-08/09/10, TR-SEC-03/12, TR-REL-04/05 | Target only |
+| IMPL-INF-07 | `infrastructure/observability/` | ARCH-11, TR-OBS-* | Target only |
+| IMPL-CI-01 | `.github/workflows/ci.yml` | TR-CQ-01/02/05/06, TR-SEC-11 | Target only |
+| IMPL-CI-02 | `.github/workflows/deploy.yml` | ARCH-13/14, TR-REL-01 | Target only |
 
 ---
 
 ## 5. Current vs Target (so the old code stays mapped during migration)
 
-The existing code targets the **old** `ARCHITECTURE.md`. This shows where today's files go.
+The existing code targets the **old** `ARCHITECTURE.md`. This shows where today's files go. **As of Phase 1, `backend/` (the replacement) exists and runs standalone; `server/` and `lambdas/graphql-service/` are still running unchanged in parallel — nothing has been cut over or decommissioned yet.**
 
 | Current file/area | Old role | Target IMPL | Fate |
 |-------------------|----------|-------------|------|
 | `frontend/` (Vite SPA) | React UI served by Node | IMPL-FE-* | **Keep**, retarget to S3/CloudFront + Cognito |
 | `server/src/app.js` (static serving) | Express serves SPA | IMPL-INF-02/03 | **Remove** (CloudFront/S3 replace it) |
-| `server/src/routes/*` (API) | REST/GraphQL proxy | IMPL-BE-04/05/06 | **Replace** with FastAPI routers |
-| `server/src/middleware/auth.js` | hand-rolled JWT | IMPL-BE-03 + ARCH-06 | **Replace** with Cognito authorizer |
-| `lambdas/graphql-service/` | GraphQL Lambda (in-memory) | IMPL-BE-* + ARCH-09 | **Replace** with FastAPI + RDS |
+| `server/src/routes/*` (API) | REST/GraphQL proxy | IMPL-BE-04/05/06 | Replacement (`backend/app/api/routers/`) now exists and is runnable standalone (Phase 1). `server/src/routes/*` itself is **untouched** — still serving live traffic. Cutover/removal is Phase 2–4, once the frontend points at `backend/` and parity is verified. |
+| `server/src/middleware/auth.js` | hand-rolled JWT | IMPL-BE-03 + ARCH-06 | Replacement (`backend/app/core/security.py`, real Cognito JWKS verification) now exists. `server/src/middleware/auth.js` is **untouched** — still in use by the old stack. Cutover is Phase 2–4. |
+| `lambdas/graphql-service/` | GraphQL Lambda (in-memory) | IMPL-BE-* + ARCH-09 | Replacement (`backend/`, FastAPI + real Postgres via SQLAlchemy/Alembic) now exists and is runnable standalone (Phase 1). `lambdas/graphql-service/` is **untouched** — still deployed/referenced by the old stack. Decommission is Phase 4, once parity is verified. |
 
 ---
 

@@ -92,7 +92,7 @@ finance-tracker-app/
 │   ├── auth/                        # Cognito user pool + authorizer [IMPL-INF-04]  (ARCH-06)
 │   ├── api/                         # HTTP API + Lambda integration  [IMPL-INF-05]  (ARCH-05/07)
 │   ├── data/                        # RDS, RDS Proxy, Secrets, KMS   [IMPL-INF-06]  (ARCH-08/09/10)
-│   └── observability/              # alarms, dashboards, tracing    [IMPL-INF-07]  (ARCH-11)
+│   └── observability/               # alarms, dashboards, tracing    [IMPL-INF-07]  (ARCH-11)
 │
 ├── .github/workflows/
 │   ├── ci.yml                       # lint, type, test, SCA, secrets [IMPL-CI-01]  (TR-CQ-06)
@@ -146,6 +146,12 @@ finance-tracker-app/
 
 **Backend standards (TR-CQ-01):** PEP 8; Ruff lint + format; full type hints checked by mypy (strict). All DB access parameterized via ORM (TR-SEC-05).
 
+> **Phase 1 implementation note on IMPL-BE-03 (deviation from the row above):** the implemented `app/core/security.py` performs full RS256/JWKS verification against Cognito itself — not just claims passthrough — regardless of whether an API Gateway authorizer has already checked the token. This is because local dev (and Phase 1 generally, which has no API Gateway yet) has no authorizer in front of the app, so app-level verification is the only enforcement point until Phase 3. It's a strict superset of the row's original intent: cheap to also re-check in prod once the authorizer exists, and it closes any authorizer-misconfiguration gap (TR-SEC-02, TR-SEC-14).
+>
+> **Phase 1 implementation note on IMPL-BE-07 / §6's `User` entity:** Phase 1 does not create a local `users` table. Cognito owns identity, no profile fields are stored yet, so a shadow `users` table would be premature generalization (TR-CQ-03, TR-DAT-03). `user_id` is simply an indexed `VARCHAR` (the Cognito `sub`) on `expenses`, `investments`, and `categories`, with no FK. This is additive to reverse: a `users` table can be introduced later without a breaking migration if per-user profile/settings data becomes necessary, since `user_id` values remain a valid join key.
+>
+> **Phase 1 status:** `backend/` is implemented per this section (IMPL-BE-01 through IMPL-BE-11, excluding the Budget/BR-12 sub-scope of IMPL-BE-11, which remains out of scope). See `backend/README.md` for how to run it and `TRACEABILITY-MATRIX.md` §4/§5 for the current-vs-target status of each row.
+
 ---
 
 ## 4. Infrastructure (IaC) — `infrastructure/`
@@ -192,7 +198,7 @@ All tables carry `user_id`; **every** repository query filters by the authentica
 The current code (`server/`, `lambdas/graphql-service/`, `frontend/`) targets the old `ARCHITECTURE.md`. Migrate incrementally:
 
 1. **Auth:** stand up Cognito (IMPL-INF-04); add `src/auth/` (IMPL-FE-01); remove hand-rolled JWT/bcrypt/session usage. *(closes TR-SEC-01/03/14 and the current token-validation gap)*
-2. **Backend:** create `backend/` FastAPI app (IMPL-BE-*) replacing `server/` API routes and `lambdas/graphql-service/`; move data to RDS behind RDS Proxy. Port endpoints REST-first (or keep GraphQL only if justified + add depth limits).
+2. **Backend (Phase 1 — done):** create `backend/` FastAPI app (IMPL-BE-*) replacing `server/` API routes and `lambdas/graphql-service/`; move data to RDS behind RDS Proxy. Port endpoints REST-first (or keep GraphQL only if justified + add depth limits). `backend/` now exists and is runnable standalone (`docker-compose up backend postgres`, real Postgres, real Cognito JWT verification) — `server/` and `lambdas/graphql-service/` are untouched and still running in parallel; this step does not yet cut traffic over to the new backend, that's Phase 2–4.
 3. **Edge/hosting:** provision S3 + CloudFront + WAF (IMPL-INF-02/03); change the SPA to call `/api/*` via CloudFront; stop serving React from Node.
 4. **Cutover:** point Route 53 at CloudFront (IMPL-INF-02); decommission ECS/ALB and the old `server/`.
 5. **Decommission** old `lambdas/graphql-service/` once parity is verified.

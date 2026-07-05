@@ -64,6 +64,34 @@ services:
       - finance-network
     command: python -m uvicorn handler:app --host 0.0.0.0 --port 4000 --reload
 
+  # FastAPI Backend — target architecture (see ../UPDATED-ARCHITECTURE.md,
+  # ../IMPLEMENTATION-PLAN.md §3). Standalone: not called by `app`/`graphql`
+  # above, and doesn't call them. Runs alongside the old stack during the
+  # phased migration; both `app`/`graphql` and this service are untouched by
+  # each other. Reuses the existing `postgres` service's credentials/database.
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: finance-tracker-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg://finance_user:finance_password@postgres:5432/finance_tracker
+      - COGNITO_USER_POOL_ID=${COGNITO_USER_POOL_ID}
+      - COGNITO_REGION=${COGNITO_REGION:-us-east-1}
+      - COGNITO_APP_CLIENT_ID=${COGNITO_APP_CLIENT_ID}
+      - ENVIRONMENT=local
+      - LOG_LEVEL=INFO
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - finance-network
+    volumes:
+      - ./backend/app:/app/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
 volumes:
   postgres_data:
     driver: local
