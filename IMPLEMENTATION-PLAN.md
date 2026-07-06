@@ -176,6 +176,14 @@ Recommended tool: **AWS CDK** (TypeScript) or CloudFormation/SAM. One stack per 
 | **IMPL-INF-06** | `data/` | RDS PostgreSQL (Multi-AZ, encrypted/KMS, private), RDS Proxy, Secrets Manager entries | ARCH-08/09/10 | TR-SEC-03/12, TR-REL-04/05, TR-PERF-03 |
 | **IMPL-INF-07** | `observability/` | CloudWatch alarms/dashboards, X-Ray enablement, log retention | ARCH-11 | TR-OBS-01/02/03 |
 
+> **Phase 3 status:** the infrastructure is implemented as a CDK (TypeScript) app under `infrastructure/` and verified offline (`tsc`, `cdk synth` renders all 6 stacks, 20 jest assertion tests on security properties, ESLint/Prettier). It is **not deployed** (no AWS credentials); deploy steps, decisions, and hardening notes are in `infrastructure/README.md`. The old-arch CloudFormation under `infrastructure/vpc/` and `infrastructure/lambda/` is untouched (Phase 4 removal).
+>
+> **Phase 3 deviations from this section (documented per TR-MNT-02):**
+> - **Stacks are `lib/*-stack.ts` files, not `infrastructure/<concern>/` folders.** That's the standard CDK layout; each file still maps 1:1 to an `IMPL-INF` id. The old-arch `vpc/`/`lambda/` folders remain beside the CDK app until Phase 4.
+> - **INF-03 (S3 SPA bucket) lives in the `Edge` stack, not its own `Storage` stack.** With OAC, CloudFront adds a bucket-policy statement referencing the distribution; across two stacks that mutual reference is a dependency cycle. The private origin bucket + its distribution are one logical unit, so co-locating is the correct CDK pattern.
+> - **DB credential delivery.** CDK composes `DATABASE_URL` from the RDS Secrets Manager secret (Phase-1 backend reads a single DSN, unchanged). The password is a CloudFormation resolve token (not in source/template) but materialises in the deployed Lambda env — a known weakness vs. runtime secret-fetch / RDS Proxy IAM auth. Flagged as a backend hardening follow-up in `infrastructure/README.md`, deliberately not done in the infra phase.
+> - **VPC endpoints:** a single NAT gateway is used for Lambda egress (correctness-first); a VPC-endpoints-only variant to drop NAT cost is noted in the README. Cognito **hosted UI** (mentioned in the INF-04 row) is not provisioned — the SPA uses the SDK's SRP flow directly (Phase 2), so no hosted UI is needed.
+
 ---
 
 ## 5. CI/CD & Tooling — `.github/workflows/`
@@ -208,7 +216,7 @@ The current code (`server/`, `lambdas/graphql-service/`, `frontend/`) targets th
 1. **Auth (Phase 1 backend + Phase 2 frontend — done):** stand up Cognito (IMPL-INF-04); add `src/auth/` (IMPL-FE-01); remove hand-rolled JWT/bcrypt/session usage. *(closes TR-SEC-01/03/14 and the current token-validation gap)* The frontend now signs in through Cognito and the backend verifies those tokens; the old Express auth is no longer used by the SPA. Creating the actual Cognito pool is still a manual user step (see `backend/README.md`).
 2. **Backend (Phase 1 — done):** create `backend/` FastAPI app (IMPL-BE-*) replacing `server/` API routes and `lambdas/graphql-service/`; move data to RDS behind RDS Proxy. Port endpoints REST-first (or keep GraphQL only if justified + add depth limits). `backend/` now exists and is runnable standalone (`docker-compose up backend postgres`, real Postgres, real Cognito JWT verification) — `server/` and `lambdas/graphql-service/` are untouched and still running in parallel; this step does not yet cut traffic over to the new backend, that's Phase 2–4.
    **Phase 2 (frontend — done):** the SPA is now TypeScript, authenticates via Cognito, and calls the new backend's `/api/*` (dev proxy → `:8000`). Charts (BR-08/09) and filters (BR-10) added. `server/`/`lambdas/` untouched.
-3. **Edge/hosting:** provision S3 + CloudFront + WAF (IMPL-INF-02/03); change the SPA to call `/api/*` via CloudFront; stop serving React from Node.
+3. **Edge/hosting & all IaC (Phase 3 — authored, not deployed):** the full target infrastructure (VPC, Cognito, RDS+Proxy, ECR+Lambda+HTTP API+JWT authorizer, S3+CloudFront+WAF+CSP, alarms) is written as a CDK app under `infrastructure/` and verified via `cdk synth` + assertion tests. Deploying it (and building/pushing the Lambda image + uploading the SPA to S3) requires AWS credentials and is a Phase 4 / operator step — see `infrastructure/README.md`.
 4. **Cutover:** point Route 53 at CloudFront (IMPL-INF-02); decommission ECS/ALB and the old `server/`.
 5. **Decommission** old `lambdas/graphql-service/` once parity is verified.
 

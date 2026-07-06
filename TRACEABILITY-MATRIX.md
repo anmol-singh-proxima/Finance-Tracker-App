@@ -147,13 +147,13 @@ Use this to answer "what does this file serve?" before changing it. *Target path
 | IMPL-BE-09 | `backend/app/schemas/` | TR-SEC-04, TR-PERF-04 | **Implemented (Phase 1)** |
 | IMPL-BE-10 | `backend/app/core/logging.py`, `backend/app/core/errors.py` | TR-OBS-01, TR-REL-02, TR-SEC-10/13 | **Implemented (Phase 1)** |
 | IMPL-BE-11 | `backend/app/api/routers/categories.py`, `services/category_service.py` | BR-03/12 | **Implemented (Phase 1)** — categories only; Budget/BR-12 sub-scope remains out of scope |
-| IMPL-INF-01 | `infrastructure/network/` | ARCH-12, TR-SEC-09, TR-REL-04 | Target only |
-| IMPL-INF-02 | `infrastructure/edge/` | ARCH-01/02/03, TR-SEC-06/07/08, TR-PERF-01 | Target only |
-| IMPL-INF-03 | `infrastructure/storage/` | ARCH-04, TR-PERF-01 | Target only |
-| IMPL-INF-04 | `infrastructure/auth/` | ARCH-06, TR-SEC-01/02/14 | Target only |
-| IMPL-INF-05 | `infrastructure/api/` | ARCH-05/07, TR-SEC-02 | Target only |
-| IMPL-INF-06 | `infrastructure/data/` | ARCH-08/09/10, TR-SEC-03/12, TR-REL-04/05 | Target only |
-| IMPL-INF-07 | `infrastructure/observability/` | ARCH-11, TR-OBS-* | Target only |
+| IMPL-INF-01 | `infrastructure/lib/network-stack.ts` | ARCH-12, TR-SEC-09, TR-REL-04 | **Implemented (Phase 3)** — CDK, `cdk synth`-verified |
+| IMPL-INF-02 | `infrastructure/lib/edge-stack.ts` | ARCH-01/02/03, TR-SEC-06/07/08, TR-PERF-01 | **Implemented (Phase 3)** — also hosts INF-03 (see note) |
+| IMPL-INF-03 | `infrastructure/lib/edge-stack.ts` (S3 bucket) | ARCH-04, TR-PERF-01 | **Implemented (Phase 3)** — co-located in the edge stack; OAC cross-stack policy would cycle otherwise |
+| IMPL-INF-04 | `infrastructure/lib/auth-stack.ts` | ARCH-06, TR-SEC-01/02/14 | **Implemented (Phase 3)** |
+| IMPL-INF-05 | `infrastructure/lib/api-stack.ts` | ARCH-05/07, TR-SEC-02 | **Implemented (Phase 3)** — Lambda-from-ECR + HTTP API + JWT authorizer |
+| IMPL-INF-06 | `infrastructure/lib/data-stack.ts` | ARCH-08/09/10, TR-SEC-03/12, TR-REL-04/05 | **Implemented (Phase 3)** — see DB-password hardening note in infra README |
+| IMPL-INF-07 | `infrastructure/lib/observability-stack.ts` | ARCH-11, TR-OBS-* | **Implemented (Phase 3)** |
 | IMPL-CI-01 | `.github/workflows/ci.yml` | TR-CQ-01/02/05/06, TR-SEC-11 | Target only |
 | IMPL-CI-02 | `.github/workflows/deploy.yml` | ARCH-13/14, TR-REL-01 | Target only |
 
