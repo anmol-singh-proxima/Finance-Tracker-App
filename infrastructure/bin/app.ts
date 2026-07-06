@@ -36,6 +36,9 @@ const api = new ApiStack(app, stackName(config, 'Api'), {
   databaseName: data.databaseName,
   userPool: auth.userPool,
   userPoolClient: auth.userPoolClient,
+  // CI pins the deployed image to the commit SHA (`-c imageTag=$GITHUB_SHA`);
+  // defaults to "latest" for manual/local deploys.
+  imageTag: app.node.tryGetContext('imageTag') as string | undefined,
 });
 
 new EdgeStack(app, stackName(config, 'Edge'), {

@@ -154,22 +154,29 @@ Use this to answer "what does this file serve?" before changing it. *Target path
 | IMPL-INF-05 | `infrastructure/lib/api-stack.ts` | ARCH-05/07, TR-SEC-02 | **Implemented (Phase 3)** — Lambda-from-ECR + HTTP API + JWT authorizer |
 | IMPL-INF-06 | `infrastructure/lib/data-stack.ts` | ARCH-08/09/10, TR-SEC-03/12, TR-REL-04/05 | **Implemented (Phase 3)** — see DB-password hardening note in infra README |
 | IMPL-INF-07 | `infrastructure/lib/observability-stack.ts` | ARCH-11, TR-OBS-* | **Implemented (Phase 3)** |
-| IMPL-CI-01 | `.github/workflows/ci.yml` | TR-CQ-01/02/05/06, TR-SEC-11 | Target only |
-| IMPL-CI-02 | `.github/workflows/deploy.yml` | ARCH-13/14, TR-REL-01 | Target only |
+| IMPL-CI-01 | `.github/workflows/ci.yml` | TR-CQ-01/02/05/06, TR-SEC-11 | **Implemented (Phase 4)** — backend/frontend/infra gates + SCA + secret scan |
+| IMPL-CI-02 | `.github/workflows/deploy.yml` | ARCH-13/14, TR-REL-01 | **Implemented (Phase 4)** — authored, not run (no AWS account); migration step is a documented operator task |
 
 ---
 
-## 5. Current vs Target (so the old code stays mapped during migration)
+## 5. Migration outcome (old stack decommissioned in Phase 4)
 
-The existing code targets the **old** `ARCHITECTURE.md`. This shows where today's files go. **As of Phase 1, `backend/` (the replacement) exists and runs standalone; `server/` and `lambdas/graphql-service/` are still running unchanged in parallel — nothing has been cut over or decommissioned yet.**
+The old-architecture code has been **removed** — the migration is code-complete
+(authored; AWS deployment is an operator step). This records what replaced what.
 
-| Current file/area | Old role | Target IMPL | Fate |
-|-------------------|----------|-------------|------|
-| `frontend/` (Vite SPA) | React UI served by Node | IMPL-FE-* | **Retargeted (Phase 2)** — converted to TypeScript, now authenticates via Cognito and calls the new `backend/` `/api/*` (dev proxy → :8000). Still built by Vite; S3/CloudFront hosting is Phase 3. The old Express `/api/auth/*` + JWT dependency is gone. |
-| `server/src/app.js` (static serving) | Express serves SPA | IMPL-INF-02/03 | **Remove** (CloudFront/S3 replace it) |
-| `server/src/routes/*` (API) | REST/GraphQL proxy | IMPL-BE-04/05/06 | Replacement (`backend/app/api/routers/`) now exists and is runnable standalone (Phase 1). `server/src/routes/*` itself is **untouched** — still serving live traffic. Cutover/removal is Phase 2–4, once the frontend points at `backend/` and parity is verified. |
-| `server/src/middleware/auth.js` | hand-rolled JWT | IMPL-BE-03 + ARCH-06 | Replacement (`backend/app/core/security.py`, real Cognito JWKS verification) now exists. `server/src/middleware/auth.js` is **untouched** — still in use by the old stack. Cutover is Phase 2–4. |
-| `lambdas/graphql-service/` | GraphQL Lambda (in-memory) | IMPL-BE-* + ARCH-09 | Replacement (`backend/`, FastAPI + real Postgres via SQLAlchemy/Alembic) now exists and is runnable standalone (Phase 1). `lambdas/graphql-service/` is **untouched** — still deployed/referenced by the old stack. Decommission is Phase 4, once parity is verified. |
+| Old file/area (removed) | Old role | Replaced by | When |
+|-------------------------|----------|-------------|------|
+| `frontend/` (was Node-served JS SPA) | React UI served by Node | `frontend/` — now TypeScript SPA, Cognito auth, calls `backend/` `/api/*`; hosted on S3/CloudFront (IMPL-INF-02/03) | Retargeted Phase 2, hosting authored Phase 3 |
+| `server/src/app.js` (static serving) | Express serves SPA | CloudFront + S3 (`infrastructure/lib/edge-stack.ts`) | **Deleted Phase 4** |
+| `server/src/routes/*` (REST/GraphQL proxy) | API | `backend/app/api/routers/*` (IMPL-BE-04/05/06) | **Deleted Phase 4** |
+| `server/src/middleware/auth.js` (hand-rolled JWT) | auth | `backend/app/core/security.py` + Cognito authorizer (IMPL-BE-03, ARCH-06) | **Deleted Phase 4** |
+| `lambdas/graphql-service/` (in-memory GraphQL) | data API | `backend/` FastAPI + RDS via SQLAlchemy/Alembic (IMPL-BE-*) | **Deleted Phase 4** |
+| `infrastructure/vpc,lambda/*.yml` (old CloudFormation) | old IaC | `infrastructure/lib/*-stack.ts` (CDK, IMPL-INF-*) | **Deleted Phase 4** |
+| `deployment/`, old `.github/workflows/deploy.yml`, old Makefile targets | old deploy | `.github/workflows/{ci,deploy}.yml` (IMPL-CI-01/02) | **Deleted Phase 4** |
+
+> Parity note: the new backend's integration suite runs for the first time in
+> CI (`ci.yml`, real Postgres). The removed code remains in git history if a
+> parity gap surfaces.
 
 ---
 

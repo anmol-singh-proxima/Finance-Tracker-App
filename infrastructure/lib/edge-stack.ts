@@ -110,6 +110,9 @@ export class EdgeStack extends Stack {
     new CfnOutput(this, 'DistributionDomainName', {
       value: this.distribution.distributionDomainName,
     });
+    // Consumed by the deploy workflow to publish the SPA and invalidate cache.
+    new CfnOutput(this, 'DistributionId', { value: this.distribution.distributionId });
+    new CfnOutput(this, 'SiteBucketName', { value: this.siteBucket.bucketName });
     new CfnOutput(this, 'SiteUrl', {
       value: props.config.domainName
         ? `https://${props.config.domainName}`

@@ -1,0 +1,127 @@
+# IMPL-CI-01 — quality gate on every PR and push (TR-CQ-01/02/05/06, TR-SEC-11).
+# A red job blocks merge. Each component is verified with the same tools used
+# locally (see each component's README).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (ruff, mypy, pytest, pip-audit)
+    runs-on: ubuntu-latest
+    services:
+      # Integration tests run against real Postgres (not SQLite) — the dashboard
+      # aggregations rely on Postgres-specific SQL. Credentials/db match
+      # backend/tests/conftest.py, which points at localhost:5432.
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: finance_user
+          POSTGRES_PASSWORD: finance_password
+          POSTGRES_DB: finance_tracker
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U finance_user -d finance_tracker"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]" pip-audit
+      - name: Create test database
+        env:
+          PGPASSWORD: finance_password
+        run: psql -h localhost -U finance_user -d finance_tracker -c "CREATE DATABASE finance_tracker_test;"
+      - name: Ruff lint
+        run: ruff check .
+      - name: Ruff format check
+        run: ruff format --check .
+      - name: Mypy
+        run: mypy .
+      - name: Pytest (unit + integration, with coverage)
+        # Coverage floor is a starting point — raise it once the first real run
+        # establishes a baseline.
+        run: pytest --cov=app --cov-report=term-missing --cov-fail-under=70
+      - name: Dependency audit (SCA)
+        run: pip-audit
+
+  frontend:
+    name: Frontend (eslint, prettier, tsc, vitest, audit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: ESLint
+        run: npm run lint
+      - name: Prettier check
+        run: npm run format:check
+      - name: Type check
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: Dependency audit (production deps only)
+        # Only prod deps ship to users. The known esbuild/vite advisories are in
+        # dev tooling (build/test), excluded here; a prod-dep advisory fails CI.
+        run: npm audit --omit=dev --audit-level=high
+
+  infrastructure:
+    name: Infrastructure (tsc, eslint, prettier, jest, synth)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infrastructure
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: infrastructure/package-lock.json
+      - run: npm ci
+      - name: Type check
+        run: npm run typecheck
+      - name: ESLint
+        run: npm run lint
+      - name: Prettier check
+        run: npm run format:check
+      - name: Unit tests (CDK assertions)
+        run: npm test
+      - name: CDK synth
+        run: npx cdk synth --quiet
+
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Scans the current working tree (not full history) via the gitleaks CLI —
+      # no org licence needed, unlike the GitHub Action. Fails on any finding.
+      - name: gitleaks
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/repo" \
+            ghcr.io/gitleaks/gitleaks:latest detect \
+            --source=/repo --no-git --redact --verbose

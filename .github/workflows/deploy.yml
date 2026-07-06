@@ -1,227 +1,103 @@
-name: Deploy to Production
+# IMPL-CI-02 — deploy to AWS on merge to main (ARCH-13/14, TR-REL-01).
+#
+# Requires (configure in the repo, once):
+#   - vars.AWS_REGION, vars.AWS_ACCOUNT_ID, vars.DEPLOY_ENV (dev|prod)
+#   - secrets.AWS_DEPLOY_ROLE_ARN — an IAM role trusting this repo via GitHub
+#     OIDC (no long-lived keys). It needs permission to push to ECR, run
+#     CloudFormation/CDK, and write to the SPA S3 bucket + CloudFront.
+#   - A GitHub environment named after DEPLOY_ENV for approval/protection.
+#
+# NOTE: this pipeline is authored but has not been run (no AWS account here).
+name: Deploy
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
 
-env:
-  AWS_REGION: us-east-1
-  NODE_VERSION: '18'
-  PYTHON_VERSION: '3.11'
+permissions:
+  id-token: write # OIDC
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  build-frontend:
-    name: Build and Test Frontend
+  deploy:
+    name: Build & deploy
     runs-on: ubuntu-latest
+    environment: ${{ vars.DEPLOY_ENV }}
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      DEPLOY_ENV: ${{ vars.DEPLOY_ENV }}
+      ECR_REPO: finance-tracker-backend-${{ vars.DEPLOY_ENV }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: 'frontend/package-lock.json'
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Install dependencies
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # --- 1. Build & push the backend image (pinned to the commit SHA) ---
+      # The ECR repo is created by the Api stack; on a first-ever deploy, run
+      # `cdk deploy ...Api` once before this workflow so the repo exists.
+      - name: Build & push backend image
         run: |
-          cd frontend
+          REGISTRY="${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com"
+          IMAGE="$REGISTRY/$ECR_REPO:${{ github.sha }}"
+          aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$REGISTRY"
+          docker build -t "$IMAGE" ./backend
+          docker push "$IMAGE"
+
+      # --- 2. Deploy the infrastructure, pinning the Lambda to that image ---
+      - name: CDK deploy
+        working-directory: infrastructure
+        run: |
           npm ci
+          npx cdk deploy --all --require-approval never \
+            -c env=$DEPLOY_ENV \
+            -c imageTag=${{ github.sha }}
 
-      - name: Run linter
-        run: |
-          cd frontend
-          npm run lint || true
+      # --- 3. Database migrations ---
+      # RDS is in private subnets and unreachable from a GitHub runner, so
+      # `alembic upgrade head` cannot run here directly. Run it from inside the
+      # VPC (self-hosted runner, CodeBuild-in-VPC, or a one-off task using the
+      # same image). See infrastructure/README.md. Left as an explicit operator
+      # step rather than a broken automated one.
+      - name: Database migrations (manual — see note above)
+        run: echo "Run 'alembic upgrade head' from within the VPC — see infrastructure/README.md"
 
-      - name: Build app
+      # --- 4. Build the SPA with the deployed Cognito settings & publish it ---
+      - name: Read stack outputs
+        id: outputs
         run: |
-          cd frontend
+          get() { aws cloudformation describe-stacks --stack-name "$1" \
+            --query "Stacks[0].Outputs[?OutputKey=='$2'].OutputValue" --output text; }
+          echo "user_pool_id=$(get FinanceTracker-$DEPLOY_ENV-Auth UserPoolId)" >> "$GITHUB_OUTPUT"
+          echo "client_id=$(get FinanceTracker-$DEPLOY_ENV-Auth UserPoolClientId)" >> "$GITHUB_OUTPUT"
+          echo "distribution_id=$(get FinanceTracker-$DEPLOY_ENV-Edge DistributionId)" >> "$GITHUB_OUTPUT"
+          echo "site_bucket=$(get FinanceTracker-$DEPLOY_ENV-Edge SiteBucketName)" >> "$GITHUB_OUTPUT"
+
+      - name: Build SPA
+        working-directory: frontend
+        env:
+          VITE_COGNITO_USER_POOL_ID: ${{ steps.outputs.outputs.user_pool_id }}
+          VITE_COGNITO_CLIENT_ID: ${{ steps.outputs.outputs.client_id }}
+          VITE_COGNITO_REGION: ${{ vars.AWS_REGION }}
+        run: |
+          npm ci
           npm run build
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: react-build
-          path: frontend/dist/
-          retention-days: 5
-
-  build-server:
-    name: Build and Test Backend
-    runs-on: ubuntu-latest
-    needs: build-frontend
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Download React build
-        uses: actions/download-artifact@v3
-        with:
-          name: react-build
-          path: frontend/dist/
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: 'server/package-lock.json'
-
-      - name: Install dependencies
+      - name: Publish SPA to S3 + invalidate CloudFront
         run: |
-          cd server
-          npm ci
-
-      - name: Run linter
-        run: |
-          cd server
-          npm run lint || true
-
-      - name: Run tests
-        run: |
-          cd server
-          npm test || true
-
-      - name: Build Docker image
-        run: |
-          docker build -t finance-tracker-server:${{ github.sha }} -f server/Dockerfile .
-
-      - name: Save Docker image
-        run: |
-          docker save finance-tracker-server:${{ github.sha }} > /tmp/server-image.tar
-
-      - name: Upload Docker image
-        uses: actions/upload-artifact@v3
-        with:
-          name: server-image
-          path: /tmp/server-image.tar
-          retention-days: 1
-
-  build-lambda:
-    name: Build and Test Lambda
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        run: |
-          cd lambdas/graphql-service
-          pip install -r requirements.txt
-
-      - name: Run tests
-        run: |
-          cd lambdas/graphql-service
-          pytest || true
-
-      - name: Build Docker image
-        run: |
-          docker build -t finance-tracker-graphql:${{ github.sha }} -f lambdas/graphql-service/Dockerfile ./lambdas/graphql-service
-
-      - name: Save Docker image
-        run: |
-          docker save finance-tracker-graphql:${{ github.sha }} > /tmp/lambda-image.tar
-
-      - name: Upload Docker image
-        uses: actions/upload-artifact@v3
-        with:
-          name: lambda-image
-          path: /tmp/lambda-image.tar
-          retention-days: 1
-
-  deploy-production:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: [build-server, build-lambda]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Download server image
-        uses: actions/download-artifact@v3
-        with:
-          name: server-image
-          path: /tmp/
-
-      - name: Download lambda image
-        uses: actions/download-artifact@v3
-        with:
-          name: lambda-image
-          path: /tmp/
-
-      - name: Load Docker images
-        run: |
-          docker load < /tmp/server-image.tar
-          docker load < /tmp/lambda-image.tar
-
-      - name: Login to ECR
-        run: |
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
-            docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-
-      - name: Push to ECR
-        run: |
-          docker tag finance-tracker-server:${{ github.sha }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/finance-tracker-server:latest
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/finance-tracker-server:latest
-
-          docker tag finance-tracker-graphql:${{ github.sha }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/finance-tracker-graphql:latest
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/finance-tracker-graphql:latest
-
-      - name: Run deployment script
-        env:
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION: ${{ env.AWS_REGION }}
-        run: |
-          chmod +x deployment/deploy.sh
-          ./deployment/deploy.sh production $AWS_REGION $AWS_ACCOUNT_ID
-
-      - name: Notify Slack on success
-        if: success()
-        uses: slackapi/slack-github-action@v1
-        with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
-          payload: |
-            {
-              "text": "✅ Finance Tracker deployment successful",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Finance Tracker - Deployment Successful* ✅\n*Commit*: ${{ github.sha }}\n*Branch*: main"
-                  }
-                }
-              ]
-            }
-
-      - name: Notify Slack on failure
-        if: failure()
-        uses: slackapi/slack-github-action@v1
-        with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
-          payload: |
-            {
-              "text": "❌ Finance Tracker deployment failed",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Finance Tracker - Deployment Failed* ❌\n*Commit*: ${{ github.sha }}\n*Branch*: main"
-                  }
-                }
-              ]
-            }
+          aws s3 sync frontend/dist "s3://${{ steps.outputs.outputs.site_bucket }}" --delete
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ steps.outputs.outputs.distribution_id }}" \
+            --paths "/*"

@@ -1,14 +1,12 @@
 # Finance Tracker — Backend (FastAPI)
 
-Phase 1 of the migration to `UPDATED-ARCHITECTURE.md` (serverless-first). This
-service is standalone: it doesn't call and isn't called by `server/` or
-`lambdas/graphql-service/` (the old stack), which keep running unchanged
-until later phases. See `../IMPLEMENTATION-PLAN.md` §3 for the full design
-and `../TRACEABILITY-MATRIX.md` for how this maps to requirements.
+The FastAPI backend for the serverless-first architecture
+(`UPDATED-ARCHITECTURE.md`). It replaced the old Express server + GraphQL Lambda,
+which were removed in Phase 4. See `../IMPLEMENTATION-PLAN.md` §3 for the full
+design and `../TRACEABILITY-MATRIX.md` for how this maps to requirements.
 
-This README (not `../docs/SETUP_GUIDE.md`) is the source of truth for running
-*this* service, since `docs/SETUP_GUIDE.md` documents the old stack end to
-end. It'll get linked in / merged once the old stack is decommissioned.
+This README is the source of truth for running *this* service; the repo-level
+[../docs/SETUP_GUIDE.md](../docs/SETUP_GUIDE.md) covers the whole local stack.
 
 ## What you need
 

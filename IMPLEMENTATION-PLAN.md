@@ -193,6 +193,13 @@ Recommended tool: **AWS CDK** (TypeScript) or CloudFormation/SAM. One stack per 
 | **IMPL-CI-01** | `ci.yml` | On PR: backend `ruff check` + `ruff format --check` + `mypy` + `pytest`; frontend `eslint` + `prettier --check` + `tsc` + tests; **SCA** (`pip-audit`, `npm audit`/Dependabot); **secret scan**; coverage gate. Red blocks merge. | TR-CQ-01/02/05/06, TR-SEC-11 |
 | **IMPL-CI-02** | `deploy.yml` | On merge to main: build SPA → sync to S3 + CloudFront invalidation; build Lambda image → push → deploy; apply IaC; run Alembic migrations | ARCH-13/14, TR-REL-01 |
 
+> **Phase 4 status:** both workflows are implemented, plus the **old stack was decommissioned** — `server/`, `lambdas/graphql-service/`, the old CloudFormation (`infrastructure/vpc,lambda/`), `deployment/`, and the old deploy workflow are deleted; `docker-compose.yml`, `Makefile`, `README.md`, and `docs/SETUP_GUIDE.md` now describe only the target stack. The migration is code-complete (`server/`/`lambdas/` live on only in git history).
+>
+> **Phase 4 notes/deviations (documented per TR-MNT-02):**
+> - **`ci.yml`** runs the backend suite against a real Postgres **service** (first time the integration tests execute) and audits **production** frontend deps only (`npm audit --omit=dev`) — the known esbuild/vite advisories are dev-tooling-only. Coverage gate starts at 70% (adjust after the first real run).
+> - **`deploy.yml`** is authored but **not run** (no AWS account). It uses GitHub **OIDC** (no long-lived keys) and pins the Lambda image to the commit SHA (`-c imageTag`). **Alembic migrations are a documented operator step, not automated** — RDS is private and unreachable from a GitHub runner; run them from in-VPC compute (see `infrastructure/README.md`).
+> - **`ARCHITECTURE.md`** (the original design) is **kept** as marked-superseded history, not deleted, per an earlier explicit decision.
+
 ---
 
 ## 6. Data Model (initial)
@@ -217,8 +224,8 @@ The current code (`server/`, `lambdas/graphql-service/`, `frontend/`) targets th
 2. **Backend (Phase 1 — done):** create `backend/` FastAPI app (IMPL-BE-*) replacing `server/` API routes and `lambdas/graphql-service/`; move data to RDS behind RDS Proxy. Port endpoints REST-first (or keep GraphQL only if justified + add depth limits). `backend/` now exists and is runnable standalone (`docker-compose up backend postgres`, real Postgres, real Cognito JWT verification) — `server/` and `lambdas/graphql-service/` are untouched and still running in parallel; this step does not yet cut traffic over to the new backend, that's Phase 2–4.
    **Phase 2 (frontend — done):** the SPA is now TypeScript, authenticates via Cognito, and calls the new backend's `/api/*` (dev proxy → `:8000`). Charts (BR-08/09) and filters (BR-10) added. `server/`/`lambdas/` untouched.
 3. **Edge/hosting & all IaC (Phase 3 — authored, not deployed):** the full target infrastructure (VPC, Cognito, RDS+Proxy, ECR+Lambda+HTTP API+JWT authorizer, S3+CloudFront+WAF+CSP, alarms) is written as a CDK app under `infrastructure/` and verified via `cdk synth` + assertion tests. Deploying it (and building/pushing the Lambda image + uploading the SPA to S3) requires AWS credentials and is a Phase 4 / operator step — see `infrastructure/README.md`.
-4. **Cutover:** point Route 53 at CloudFront (IMPL-INF-02); decommission ECS/ALB and the old `server/`.
-5. **Decommission** old `lambdas/graphql-service/` once parity is verified.
+4. **Cutover & decommission (Phase 4 — done in code):** the old `server/` and `lambdas/graphql-service/` are **deleted**, along with the old CloudFormation, `deployment/`, and the old deploy workflow; CI/CD (`ci.yml`/`deploy.yml`) is in place. The physical Route 53 → CloudFront cutover and tearing down any *deployed* old AWS resources are operator actions (nothing of the old stack was ever deployed from this repo in this migration).
+5. **Decommission** old `lambdas/graphql-service/` — **done (Phase 4)**. Its parity replacement (`backend/`) is exercised by CI against real Postgres; the old code remains in git history if a gap surfaces.
 
 Each step: update [TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md) so `IMPL → code` reflects reality.
 
