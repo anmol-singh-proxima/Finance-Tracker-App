@@ -8,7 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
 import Investments from './pages/Investments';
 import Login from './pages/Login';
-import { getCurrentSession } from './auth/cognito';
+import { getCurrentSession } from './auth';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { authenticated, unauthenticated } from './store/slices/authSlice';
 

@@ -32,7 +32,7 @@ A personal finance tracker that lets an individual record their day-to-day spend
 
 | ID | Requirement | Description | Priority |
 |----|-------------|-------------|----------|
-| **BR-01** | Secure account & sign-in | A user can create an account and sign in securely. Only authenticated users can access the app's data features. | M |
+| **BR-01** | Secure account & sign-in | A user can create an account and sign in securely; only authenticated users can access data features. Met by the DB-backed local auth provider in local dev and by Amazon Cognito in staging/production (same UX — see [ARCHITECTURE.md](ARCHITECTURE.md) §4). | M |
 | **BR-02** | Record a daily expense | A user can record an expense with **amount**, **category**, **date**, and an optional **description/note**. Defaults to today's date. | M |
 | **BR-03** | Categorize expenses | Expenses are organized by category (e.g. Food, Rent, Transport, Utilities, Entertainment). The user can use predefined categories and create their own custom categories. | M |
 | **BR-04** | Record an investment | A user can record an investment with **name/type**, **amount invested**, **date**, and optionally **current value / return %**. | M |
@@ -83,4 +83,4 @@ If any of these become required, add a new `BR-NN` here first, then propagate th
 2. Update [TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md) so the new/changed `BR` maps to architecture and implementation.
 3. Only then change code. Code without a `BR`/`TR` behind it should not be merged.
 
-**Related documents:** [TECHNICAL-REQUIREMENTS.md](TECHNICAL-REQUIREMENTS.md) · [UPDATED-ARCHITECTURE.md](UPDATED-ARCHITECTURE.md) · [IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md) · [TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md) · [AI-CODING-AGENT-SYSTEM-PROMPT.md](AI-CODING-AGENT-SYSTEM-PROMPT.md)
+**Related documents:** [TECHNICAL-REQUIREMENTS.md](TECHNICAL-REQUIREMENTS.md) · [ARCHITECTURE.md](ARCHITECTURE.md) · [IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md) · [TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md) · [AI-CODING-AGENT-SYSTEM-PROMPT.md](AI-CODING-AGENT-SYSTEM-PROMPT.md)

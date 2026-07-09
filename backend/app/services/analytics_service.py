@@ -62,10 +62,9 @@ def get_summary(db: Session, user_id: str, period: Period) -> DashboardSummary:
     total_invested = Decimal(investment_row.invested)
     total_current_value = Decimal(investment_row.current_value)
     total_returns = total_current_value - total_invested
-    # net_worth intentionally matches the current server/src/routes/dashboard.js
-    # formula exactly (current_value - expenses) — a documented parity choice,
-    # not a redesign; changing what "net worth" means is a product decision
-    # out of Phase 1's scope. See IMPLEMENTATION-PLAN.md's endpoint table note.
+    # net_worth = current investment value minus this period's expenses. This is
+    # the product's chosen definition; changing it is a product decision, not a
+    # code one. See IMPLEMENTATION-PLAN.md's endpoint table note.
     net_worth = total_current_value - total_expenses
     roi = float(total_returns / total_invested * 100) if total_invested > 0 else 0.0
 

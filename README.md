@@ -7,7 +7,7 @@ category breakdowns.
 Built on a **serverless-first AWS architecture**: a static React (TypeScript) SPA
 on CloudFront/S3, a FastAPI backend on Lambda behind API Gateway with a Cognito
 JWT authorizer, and PostgreSQL on RDS. See
-[UPDATED-ARCHITECTURE.md](UPDATED-ARCHITECTURE.md) for the full design.
+[ARCHITECTURE.md](ARCHITECTURE.md) for the full design.
 
 ## This repository is requirements-governed
 
@@ -23,13 +23,11 @@ Start here:
 |----------|-----------|
 | [BUSINESS-REQUIREMENTS.md](BUSINESS-REQUIREMENTS.md) | What the product must do (`BR-*`) |
 | [TECHNICAL-REQUIREMENTS.md](TECHNICAL-REQUIREMENTS.md) | The quality/security/perf bar (`TR-*`) |
-| [UPDATED-ARCHITECTURE.md](UPDATED-ARCHITECTURE.md) | Target architecture (`ARCH-*`) |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Target architecture (`ARCH-*`) |
 | [IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md) | Target code structure (`IMPL-*`) |
 | [TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md) | The BR↔TR↔ARCH↔IMPL↔file mapping |
 | [AI-CODING-AGENT-SYSTEM-PROMPT.md](AI-CODING-AGENT-SYSTEM-PROMPT.md) | Rules for AI coding agents |
-
-> [ARCHITECTURE.md](ARCHITECTURE.md) is the **original** design, retained for
-> history only and marked superseded — do not build against it.
+| [docs/LOCAL-DEVELOPMENT.md](docs/LOCAL-DEVELOPMENT.md) | Run & test the whole app locally (no AWS) |
 
 ## Layout
 

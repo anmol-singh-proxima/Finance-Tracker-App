@@ -13,13 +13,32 @@ Every `TR` is **testable/verifiable** — written so that compliance can be chec
 
 **Target compliance baseline:** OWASP **ASVS 5.0** (May 2025) **Level 2**, and the **OWASP Top 10 (2021)** fully addressed. See [References](#references).
 
+## 0. Environment profiles (dual)
+
+The one architecture (see [ARCHITECTURE.md](ARCHITECTURE.md) §3) runs in two
+profiles, selected by configuration. Most `TR`s apply to **both**; a few are
+profile-scoped and tagged **[Local profile]** or **[Staging/Prod profile]**.
+
+- **Local** (`AUTH_PROVIDER=local`) — the whole app runs on a developer machine
+  with **no AWS account**: Vite + FastAPI container + local Postgres, DB-backed
+  auth. This is the default and the required first step before any deployment.
+- **Staging/Production** (`AUTH_PROVIDER=cognito`) — deployed to AWS: S3/CloudFront
+  + API Gateway + Lambda + RDS + Cognito.
+
+| ID | Requirement | Verification |
+|----|-------------|--------------|
+| **TR-ENV-01** | **Local-first.** Every component runs locally with no cloud dependency, so the app can be fully developed and tested before any AWS deployment. Application code is identical across profiles; only configuration differs. | `docker compose up postgres backend` + `npm run dev` run the full stack; the test suites pass locally with no AWS. |
+| **TR-ENV-02** | **Config as separate variables.** The database connection is provided as discrete env vars (`DB_HOST/PORT/NAME/USER/PASSWORD/SCHEMA`) assembled into a DSN in code (not one opaque `DATABASE_URL`), so credentials can be rotated individually. Secrets never live in source (TR-SEC-03). | `app/core/config.py` builds the DSN from the parts; `.env.example` documents each; no `DATABASE_URL` in code. |
+| **TR-ENV-03** | **Profile parity & fail-closed per profile.** Each profile validates its own required config at startup and fails closed if it is missing (e.g. the cognito profile requires the `COGNITO_*` vars; the local profile does not). | Startup/unit test: `AUTH_PROVIDER=cognito` without Cognito vars raises; local profile starts without them. |
+
 ---
 
 ## 1. Security (OWASP-aligned) — non-negotiable
 
 | ID | Requirement | Verification | OWASP ref |
 |----|-------------|--------------|-----------|
-| **TR-SEC-01** | Authentication is delegated to a managed identity provider (Amazon Cognito). No hand-rolled password hashing, JWT signing, or session management in app code. | No bcrypt/jwt-signing/session code in repo; auth flows go through Cognito. | ASVS V2; Top 10 A07 |
+| **TR-SEC-01** | **[Staging/Prod profile]** Authentication is delegated to a managed identity provider (Amazon Cognito). No hand-rolled password hashing/JWT signing/session management is used in deployed environments. | With `AUTH_PROVIDER=cognito`, auth flows go through Cognito; the backend verifies JWTs against JWKS. | ASVS V2; Top 10 A07 |
+| **TR-SEC-01L** | **[Local profile]** The local DB-backed auth provider (`AUTH_PROVIDER=local`) must be secure: passwords hashed with **bcrypt** (never stored/logged in plaintext); session tokens are cryptographically random and stored **only as a SHA-256 hash**; the open register/login endpoints are **rate-limited** per client; all DB access is ORM-parameterized. The provider is mounted **only** in the local profile (no unauthenticated surface in prod). | Unit + integration tests: password not echoed, wrong password → 401, duplicate → 409, rate limit → 429, token resolves to the owning user and scopes data access. | ASVS V2/V3; Top 10 A07/A03 |
 | **TR-SEC-02** | Every non-public API request is **authenticated** (token validated at the API gateway) **and authorized** server-side, scoped to the verified user identity (`sub`). The user identity is taken **only** from verified token claims — never from a client-supplied field. | Gateway JWT authorizer rejects invalid/absent tokens; server enforces owner == `sub` on every record access; test proves user A cannot read user B's data. | ASVS V4; Top 10 **A01 Broken Access Control** |
 | **TR-SEC-03** | **No secrets in source or images.** All secrets/config come from environment (12-factor) backed by Secrets Manager/SSM. **No hardcoded default/fallback secrets.** App **fails closed** (refuses to start) if a required secret is missing. | Secret scanner in CI passes; grep finds no literal secrets/default keys; startup test fails when a required var is unset. | ASVS V6/V14; Top 10 A05 |
 | **TR-SEC-04** | All external input is validated and constrained at trust boundaries (type, range, length, format) before use. | Pydantic models on every request body/param; invalid input returns 4xx, never 5xx. | ASVS V5; Top 10 **A03 Injection** |
@@ -113,7 +132,7 @@ Every `TR` is **testable/verifiable** — written so that compliance can be chec
 
 ```
 BUSINESS-REQUIREMENTS (BR)  ─┐
-TECHNICAL-REQUIREMENTS (TR) ─┼─►  UPDATED-ARCHITECTURE.md (ARCH)
+TECHNICAL-REQUIREMENTS (TR) ─┼─►  ARCHITECTURE.md (ARCH)
                              │         │
                              │         ▼
                              │   IMPLEMENTATION-PLAN.md (IMPL)

@@ -1,24 +1,23 @@
 # Finance Tracker — Backend (FastAPI)
 
-The FastAPI backend for the serverless-first architecture
-(`UPDATED-ARCHITECTURE.md`). It replaced the old Express server + GraphQL Lambda,
-which were removed in Phase 4. See `../IMPLEMENTATION-PLAN.md` §3 for the full
-design and `../TRACEABILITY-MATRIX.md` for how this maps to requirements.
+The FastAPI backend for the serverless-first architecture (`ARCHITECTURE.md`).
+See `../IMPLEMENTATION-PLAN.md` §3 for the design and `../TRACEABILITY-MATRIX.md`
+for how it maps to requirements.
 
-This README is the source of truth for running *this* service; the repo-level
-[../docs/SETUP_GUIDE.md](../docs/SETUP_GUIDE.md) covers the whole local stack.
+> **For local development you do NOT need any of the Cognito setup below.** With
+> the default `AUTH_PROVIDER=local`, the backend uses its own DB-backed auth
+> (`/api/auth/*`) and needs no AWS account. The fastest path to running the whole
+> app locally is [../docs/LOCAL-DEVELOPMENT.md](../docs/LOCAL-DEVELOPMENT.md). The
+> Cognito steps here apply only to the **staging/production profile**
+> (`AUTH_PROVIDER=cognito`).
 
-## What you need
+## Cognito setup (staging/production profile only)
 
-- Docker (for Postgres, and optionally for running the backend itself)
-- Python 3.11+ (if you want to run the backend outside Docker)
+### What you need
+
 - AWS CLI, configured with credentials that can create Cognito resources
 
-**I (the coding agent) cannot create AWS resources — no credentials.** The
-Cognito User Pool below has to be created by you, once, using the AWS CLI
-commands below.
-
-## 1. Create a Cognito User Pool (one-time, real AWS resource)
+### 1. Create a Cognito User Pool
 
 ```bash
 aws cognito-idp create-user-pool \
@@ -93,21 +92,22 @@ print(json.dumps(json.loads(base64.urlsafe_b64decode(t.split('.')[1] +
 verification logic assumes this token shape; if AWS ever changes it, the
 check needs updating.
 
-## 5. Configure environment variables
+## 5. Configure environment variables (cognito profile)
 
-Create a `.env` file at the **repo root** (`docker-compose` auto-loads it) or
-`backend/.env` (used if you run the app outside Docker) — see
-`backend/.env.example` for the full list. At minimum:
+For the cognito profile, set `AUTH_PROVIDER=cognito` plus the Cognito
+identifiers (see `backend/.env.example` for the full list):
 
 ```
+AUTH_PROVIDER=cognito
 COGNITO_USER_POOL_ID=<from step 1>
 COGNITO_REGION=us-east-1
 COGNITO_APP_CLIENT_ID=<from step 2>
 ```
 
-`DATABASE_URL` doesn't need to be set for the compose flow below — the
-`backend` service in `docker-compose.yml` already points it at the existing
-`postgres` service.
+The database connection is provided as separate `DB_*` vars (assembled into a
+DSN in `app/core/config.py`), which the docker-compose `backend` service already
+sets for local runs. **Local development needs none of this** — it defaults to
+`AUTH_PROVIDER=local`; see [../docs/LOCAL-DEVELOPMENT.md](../docs/LOCAL-DEVELOPMENT.md).
 
 ## Running locally
 
@@ -146,8 +146,10 @@ docker exec -it finance-tracker-db psql -U finance_user -d finance_tracker \
 cd backend
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-DATABASE_URL="postgresql+psycopg://finance_user:finance_password@localhost:5432/finance_tracker_test" \
-  alembic upgrade head
+# The suite reads DB_* (see tests/conftest.py, which defaults to the test DB);
+# migrations need them too when run standalone:
+DB_HOST=localhost DB_PORT=5432 DB_NAME=finance_tracker_test \
+  DB_USER=finance_user DB_PASSWORD=finance_password alembic upgrade head
 pytest -v --cov=app --cov-report=term-missing
 ```
 

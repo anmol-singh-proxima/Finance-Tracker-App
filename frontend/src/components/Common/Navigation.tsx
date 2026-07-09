@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 
-import { signOut } from '../../auth/cognito';
+import { signOut } from '../../auth';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { unauthenticated } from '../../store/slices/authSlice';
 import './Navigation.css';

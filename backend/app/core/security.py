@@ -1,18 +1,17 @@
-"""JWT verification against Cognito's JWKS.
+"""JWT verification against Cognito's JWKS — the Cognito auth provider
+(AUTH_PROVIDER=cognito). The local provider (development) uses opaque session
+tokens instead; see app/services/local_auth_service.py.
 
 This module is framework-agnostic (no FastAPI imports) so it's directly unit
 testable — see tests/unit/test_security.py, which signs tokens with a locally
 generated RSA keypair and mocks the JWKS HTTP fetch, so the full verification
 path runs fully offline in CI.
 
-This closes UPDATED-ARCHITECTURE.md §9 finding #1: the old Lambda's
-`extract_user_from_token` was a stub that never verified anything and returned
-a hardcoded placeholder. This module performs real RS256/JWKS verification
-(TR-SEC-02, TR-SEC-14) on every request, regardless of whether an API Gateway
-authorizer already verified the token upstream — see IMPLEMENTATION-PLAN.md's
-note near IMPL-BE-03 for why (local dev has no authorizer in front of this
-app; re-checking in prod is cheap and closes any authorizer-misconfiguration
-gap).
+It performs real RS256/JWKS verification (TR-SEC-02, TR-SEC-14) on every
+request, regardless of whether an API Gateway authorizer already verified the
+token upstream — defence in depth, and the only enforcement point in any setup
+without an authorizer in front. Re-checking in prod is cheap and closes any
+authorizer-misconfiguration gap.
 """
 
 import time

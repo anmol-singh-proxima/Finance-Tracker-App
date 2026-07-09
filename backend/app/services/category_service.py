@@ -1,7 +1,7 @@
 """Category business logic — merged predefined+custom list, duplicate-name
-rejection (BR-03). Budgets (BR-12) are explicitly out of scope for Phase 1 —
-no stub endpoint is added, since an absent endpoint is simpler than a 501
-placeholder (TR-CQ-03 proportionality)."""
+rejection (BR-03). Budgets (BR-12) are explicitly out of scope — no stub
+endpoint is added, since an absent endpoint is simpler than a 501 placeholder
+(TR-CQ-03 proportionality)."""
 
 from sqlalchemy.orm import Session
 

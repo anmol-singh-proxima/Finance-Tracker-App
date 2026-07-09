@@ -10,7 +10,7 @@
 
 import axios, { AxiosError, type AxiosInstance } from 'axios';
 
-import { getAccessToken, signOut } from '../auth/cognito';
+import { getAccessToken, signOut } from '../auth';
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
@@ -18,8 +18,9 @@ const apiClient: AxiosInstance = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Bearer token is issued by Cognito, not stored by us — fetch a valid (auto-
-// refreshed) one per request. Never log the token (TR-SEC-10).
+// Ask the active auth provider for a valid token per request (Cognito refreshes
+// its own; the local provider returns the stored session token). Never log it
+// (TR-SEC-10).
 apiClient.interceptors.request.use(async (config) => {
   const token = await getAccessToken();
   if (token) {

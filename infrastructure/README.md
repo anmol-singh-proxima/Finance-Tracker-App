@@ -1,9 +1,9 @@
 # Finance Tracker — Infrastructure (AWS CDK)
 
-Phase 3 of the migration to `../UPDATED-ARCHITECTURE.md` (serverless-first). This
-CDK app (TypeScript) provisions the target AWS architecture. It supersedes the
-old-arch CloudFormation under `vpc/` and `lambda/`, which remain only until the
-Phase 4 decommission — **the CDK app does not use them.**
+The AWS CDK app (TypeScript) that provisions the infrastructure for
+`../ARCHITECTURE.md` (serverless-first) — the **staging/production** profile.
+Local development uses none of this (see
+[../docs/LOCAL-DEVELOPMENT.md](../docs/LOCAL-DEVELOPMENT.md)).
 
 See `../IMPLEMENTATION-PLAN.md` §4 for the design and `../TRACEABILITY-MATRIX.md`
 for how each stack maps to requirements.
@@ -85,16 +85,14 @@ npx cdk synth       # renders CloudFormation for all 6 stacks
 
 ## Key decisions & known limitations (be aware before deploying)
 
-1. **DB password reaches the Lambda env.** The Lambda reads a single
-   `DATABASE_URL` (Phase-1 backend contract). CDK composes it from the RDS
-   Secrets Manager secret, so the password is **not** in source or the template
-   (it's a CloudFormation resolve token) — but it *does* materialise in the
-   deployed Lambda's environment config, readable by anyone with
-   `lambda:GetFunctionConfiguration`. **Recommended hardening (backend change,
-   deferred):** have the Lambda fetch the password from Secrets Manager at
-   runtime, or use **RDS Proxy IAM authentication** so no password exists in the
-   env at all. Left as a follow-up to avoid changing verified Phase-1 backend
-   code during the infra phase.
+1. **DB password reaches the Lambda env.** The Lambda reads the DB connection as
+   separate `DB_*` env vars. CDK sets `DB_PASSWORD` from the RDS Secrets Manager
+   secret, so the password is **not** in source or the template (it's a
+   CloudFormation resolve token) — but it *does* materialise in the deployed
+   Lambda's environment config, readable by anyone with
+   `lambda:GetFunctionConfiguration`. **Recommended hardening:** have the Lambda
+   fetch the password from Secrets Manager at runtime, or use **RDS Proxy IAM
+   authentication** so no password exists in the env at all.
 2. **TLS 1.2+ needs a custom domain.** With the default `*.cloudfront.net`
    domain, CloudFront uses its own (older) default TLS policy and ignores the
    minimum-protocol setting. Set `domainName`/`hostedZoneId` for prod so

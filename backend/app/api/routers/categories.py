@@ -1,6 +1,6 @@
-"""Category HTTP endpoints (BR-03). No PUT/DELETE in Phase 1 — predefined
-categories are immutable and expenses reference categories by string value,
-not FK, so this isn't blocking anything; see IMPLEMENTATION-PLAN.md's note
+"""Category HTTP endpoints (BR-03). No PUT/DELETE — predefined categories are
+immutable and expenses reference categories by string value, not FK, so this
+isn't blocking anything; see IMPLEMENTATION-PLAN.md's note
 near IMPL-BE-11 for the full rationale."""
 
 from fastapi import APIRouter, Depends, status

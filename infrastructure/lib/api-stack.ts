@@ -53,14 +53,13 @@ export class ApiStack extends Stack {
       lifecycleRules: [{ maxImageCount: 10 }],
     });
 
-    // DB DSN for the Phase-1 backend, which reads a single DATABASE_URL. The
-    // password is a Secrets Manager resolve token (not literal in the template
-    // or source), but it does materialise in the deployed Lambda env config.
-    // HARDENING (see README): move to runtime secret fetch or RDS Proxy IAM auth
-    // so no password lives in the Lambda environment.
+    // DB connection as separate vars (the backend assembles the DSN itself).
+    // The password is a Secrets Manager resolve token (not literal in the
+    // template or source), but it does materialise in the deployed Lambda env
+    // config. HARDENING (see README): move to runtime secret fetch or RDS Proxy
+    // IAM auth so no password lives in the Lambda environment.
     const dbUser = props.dbSecret.secretValueFromJson('username').unsafeUnwrap();
     const dbPassword = props.dbSecret.secretValueFromJson('password').unsafeUnwrap();
-    const databaseUrl = `postgresql+psycopg://${dbUser}:${dbPassword}@${props.dbProxy.endpoint}:5432/${props.databaseName}`;
 
     const logGroup = new logs.LogGroup(this, 'BackendFnLogs', {
       retention: config.isProd ? logs.RetentionDays.THREE_MONTHS : logs.RetentionDays.TWO_WEEKS,
@@ -78,7 +77,14 @@ export class ApiStack extends Stack {
       tracing: lambda.Tracing.ACTIVE,
       logGroup,
       environment: {
-        DATABASE_URL: databaseUrl,
+        DB_HOST: props.dbProxy.endpoint,
+        DB_PORT: '5432',
+        DB_NAME: props.databaseName,
+        DB_USER: dbUser,
+        DB_PASSWORD: dbPassword,
+        DB_SCHEMA: 'public',
+        // Deployed environments verify Cognito JWTs.
+        AUTH_PROVIDER: 'cognito',
         COGNITO_USER_POOL_ID: props.userPool.userPoolId,
         COGNITO_APP_CLIENT_ID: props.userPoolClient.userPoolClientId,
         COGNITO_REGION: this.region,

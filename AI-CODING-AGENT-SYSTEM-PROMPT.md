@@ -43,7 +43,7 @@ The source-of-truth documents are:
 - **[TECHNICAL-REQUIREMENTS.md](TECHNICAL-REQUIREMENTS.md)** — the quality/security/
   performance/standards bar (`TR-*`). The whole "Security", "Robustness", "Performance",
   and "Code quality" intent below is formalized and made testable there.
-- **[UPDATED-ARCHITECTURE.md](UPDATED-ARCHITECTURE.md)** — the target architecture
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** — the target architecture
   (`ARCH-*`, catalogued in the matrix).
 - **[IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md)** — the target code structure and
   per-file responsibilities (`IMPL-*`).

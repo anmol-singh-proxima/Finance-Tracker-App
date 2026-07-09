@@ -17,11 +17,11 @@ If you change anything in that chain, you update this file in the **same** chang
 |-------|-----------|-----------|
 | Business requirements | `BR-*` | [BUSINESS-REQUIREMENTS.md](BUSINESS-REQUIREMENTS.md) |
 | Technical requirements | `TR-*` | [TECHNICAL-REQUIREMENTS.md](TECHNICAL-REQUIREMENTS.md) |
-| Architecture components | `ARCH-*` | catalog in [§1](#1-architecture-component-catalog) below; described in [UPDATED-ARCHITECTURE.md](UPDATED-ARCHITECTURE.md) |
+| Architecture components | `ARCH-*` | catalog in [§1](#1-architecture-component-catalog) below; described in [ARCHITECTURE.md](ARCHITECTURE.md) |
 | Implementation units | `IMPL-*` | [IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md) |
 | Codebase | file paths | this repo |
 
-> **Note on ARCH IDs:** The architecture narrative lives in [UPDATED-ARCHITECTURE.md](UPDATED-ARCHITECTURE.md); the stable **ARCH IDs are catalogued here** (§1) so the architecture file can stay prose-readable while remaining referenceable. If the architecture changes, update §1 here and the matrices below.
+> **Note on ARCH IDs:** The architecture narrative lives in [ARCHITECTURE.md](ARCHITECTURE.md); the stable **ARCH IDs are catalogued here** (§1) so the architecture file can stay prose-readable while remaining referenceable. If the architecture changes, update §1 here and the matrices below.
 
 ---
 
@@ -29,7 +29,7 @@ If you change anything in that chain, you update this file in the **same** chang
 
 | ARCH ID | Component | Where in architecture |
 |---------|-----------|------------------------|
-| **ARCH-01** | Route 53 (DNS) | UPDATED-ARCHITECTURE.md §2 |
+| **ARCH-01** | Route 53 (DNS) | ARCHITECTURE.md §2 |
 | **ARCH-02** | CloudFront distribution (TLS/ACM, edge cache, security headers/CSP) | §2, §5 |
 | **ARCH-03** | AWS WAF (managed rules, rate-based) | §2, §5 |
 | **ARCH-04** | S3 static origin (private, OAC) — SPA hosting | §2 |
@@ -43,6 +43,7 @@ If you change anything in that chain, you update this file in the **same** chang
 | **ARCH-12** | VPC / subnets / security groups (network isolation) | §5, §6 |
 | **ARCH-13** | Infrastructure-as-Code (CDK/CloudFormation) | §8 |
 | **ARCH-14** | CI/CD pipeline | §8 |
+| **ARCH-15** | Auth provider abstraction (local / Cognito, by config) | §2, §4 |
 
 ---
 
@@ -50,7 +51,7 @@ If you change anything in that chain, you update this file in the **same** chang
 
 | BR | Requirement (short) | ARCH | IMPL | Target code (per IMPLEMENTATION-PLAN) |
 |----|---------------------|------|------|----------------------------------------|
-| **BR-01** | Secure account & sign-in | ARCH-06 | IMPL-FE-01, IMPL-INF-04 | `frontend/src/auth/`, `infrastructure/auth/` |
+| **BR-01** | Secure account & sign-in | ARCH-06/15 | IMPL-FE-01, IMPL-BE-12 (local), IMPL-INF-04 (cognito) | `frontend/src/auth/`, `backend/app/api/routers/auth.py`, `infrastructure/auth/` |
 | **BR-02** | Record a daily expense | ARCH-05/07/09 | IMPL-FE-03, IMPL-BE-04, IMPL-BE-07 | `frontend/src/features/expenses/`, `backend/app/.../expenses.py`, `models/` |
 | **BR-03** | Categorize expenses | ARCH-07/09 | IMPL-FE-03, IMPL-BE-11 | `features/expenses/`, `backend/app/api/routers/categories.py` |
 | **BR-04** | Record an investment | ARCH-05/07/09 | IMPL-FE-04, IMPL-BE-05, IMPL-BE-07 | `features/investments/`, `.../investments.py`, `models/` |
@@ -76,8 +77,9 @@ If you change anything in that chain, you update this file in the **same** chang
 
 | TR | Requirement (short) | ARCH | IMPL | Verified by |
 |----|---------------------|------|------|-------------|
-| **TR-SEC-01** | Auth via managed IdP | ARCH-06 | IMPL-FE-01, IMPL-INF-04 | no hand-rolled auth in repo |
-| **TR-SEC-02** | AuthN at gateway + AuthZ scoped to `sub` | ARCH-05/06/07 | IMPL-BE-03/04/05 | cross-user access test |
+| **TR-SEC-01** | Auth via managed IdP *(staging/prod)* | ARCH-06/15 | IMPL-FE-01, IMPL-BE-03, IMPL-INF-04 | cognito profile uses Cognito; JWKS verify |
+| **TR-SEC-01L** | Secure local DB auth *(local)* | ARCH-15 | IMPL-BE-12, IMPL-FE-01 | bcrypt/hashed-token/rate-limit tests |
+| **TR-SEC-02** | AuthN + AuthZ scoped to the verified user id | ARCH-05/06/07/15 | IMPL-BE-03/04/05/12 | cross-user access test |
 | **TR-SEC-03** | No secrets in code; fail closed | ARCH-10 | IMPL-BE-02, IMPL-INF-06 | secret scan; startup test |
 | **TR-SEC-04** | Validate input at boundaries | ARCH-07 | IMPL-BE-09 | invalid input → 422 tests |
 | **TR-SEC-05** | Parameterized queries only | ARCH-07/09 | IMPL-BE-04/05/06/08 | code review/lint |
@@ -119,12 +121,15 @@ If you change anything in that chain, you update this file in the **same** chang
 | **TR-DAT-01** | Per-user isolation at data layer | ARCH-07/09 | IMPL-BE-03/04/05 | cross-user test |
 | **TR-DAT-02** | Export / deletion | ARCH-07 | IMPL-BE-04/05 | export/delete path |
 | **TR-DAT-03** | Data minimization | ARCH-09 | IMPL-BE-07 | schema review |
+| **TR-ENV-01** | Local-first: whole app runs with no AWS | ARCH-15 | IMPL-BE-02/12, IMPL-FE-01, docker-compose | `docker compose` + `npm run dev`; tests pass locally |
+| **TR-ENV-02** | Config via separate DB vars | ARCH-10 | IMPL-BE-02 | DSN assembled from DB_* in config |
+| **TR-ENV-03** | Fail-closed per profile | ARCH-15 | IMPL-BE-02 | cognito profile requires COGNITO_*; startup test |
 
 ---
 
 ## 4. Implementation → Codebase (reverse lookup)
 
-Use this to answer "what does this file serve?" before changing it. *Target paths (some not yet created — see migration order in IMPLEMENTATION-PLAN §7).*
+Use this to answer "what does this file serve?" before changing it. *Target paths (some not yet created — see build order in IMPLEMENTATION-PLAN §7).*
 
 | IMPL | Target path(s) | Serves (BR/TR) | Status |
 |------|----------------|----------------|--------|
@@ -147,6 +152,7 @@ Use this to answer "what does this file serve?" before changing it. *Target path
 | IMPL-BE-09 | `backend/app/schemas/` | TR-SEC-04, TR-PERF-04 | **Implemented (Phase 1)** |
 | IMPL-BE-10 | `backend/app/core/logging.py`, `backend/app/core/errors.py` | TR-OBS-01, TR-REL-02, TR-SEC-10/13 | **Implemented (Phase 1)** |
 | IMPL-BE-11 | `backend/app/api/routers/categories.py`, `services/category_service.py` | BR-03/12 | **Implemented (Phase 1)** — categories only; Budget/BR-12 sub-scope remains out of scope |
+| IMPL-BE-12 | `backend/app/api/routers/auth.py`, `services/local_auth_service.py`, `core/passwords.py`, `core/rate_limit.py`, `models/user.py`, `models/auth_session.py`, `schemas/auth.py` | BR-01, TR-SEC-01L, TR-ENV-01 | **Implemented (local profile)** |
 | IMPL-INF-01 | `infrastructure/lib/network-stack.ts` | ARCH-12, TR-SEC-09, TR-REL-04 | **Implemented (Phase 3)** — CDK, `cdk synth`-verified |
 | IMPL-INF-02 | `infrastructure/lib/edge-stack.ts` | ARCH-01/02/03, TR-SEC-06/07/08, TR-PERF-01 | **Implemented (Phase 3)** — also hosts INF-03 (see note) |
 | IMPL-INF-03 | `infrastructure/lib/edge-stack.ts` (S3 bucket) | ARCH-04, TR-PERF-01 | **Implemented (Phase 3)** — co-located in the edge stack; OAC cross-stack policy would cycle otherwise |
@@ -159,20 +165,24 @@ Use this to answer "what does this file serve?" before changing it. *Target path
 
 ---
 
-## 5. Migration outcome (old stack decommissioned in Phase 4)
+## 5. Environment-profile applicability
 
-The old-architecture code has been **removed** — the migration is code-complete
-(authored; AWS deployment is an operator step). This records what replaced what.
+The one architecture runs in two profiles (ARCHITECTURE.md §3). Most requirements
+and implementation units apply to **both**; these are the profile-scoped ones.
 
-| Old file/area (removed) | Old role | Replaced by | When |
-|-------------------------|----------|-------------|------|
-| `frontend/` (was Node-served JS SPA) | React UI served by Node | `frontend/` — now TypeScript SPA, Cognito auth, calls `backend/` `/api/*`; hosted on S3/CloudFront (IMPL-INF-02/03) | Retargeted Phase 2, hosting authored Phase 3 |
-| `server/src/app.js` (static serving) | Express serves SPA | CloudFront + S3 (`infrastructure/lib/edge-stack.ts`) | **Deleted Phase 4** |
-| `server/src/routes/*` (REST/GraphQL proxy) | API | `backend/app/api/routers/*` (IMPL-BE-04/05/06) | **Deleted Phase 4** |
-| `server/src/middleware/auth.js` (hand-rolled JWT) | auth | `backend/app/core/security.py` + Cognito authorizer (IMPL-BE-03, ARCH-06) | **Deleted Phase 4** |
-| `lambdas/graphql-service/` (in-memory GraphQL) | data API | `backend/` FastAPI + RDS via SQLAlchemy/Alembic (IMPL-BE-*) | **Deleted Phase 4** |
-| `infrastructure/vpc,lambda/*.yml` (old CloudFormation) | old IaC | `infrastructure/lib/*-stack.ts` (CDK, IMPL-INF-*) | **Deleted Phase 4** |
-| `deployment/`, old `.github/workflows/deploy.yml`, old Makefile targets | old deploy | `.github/workflows/{ci,deploy}.yml` (IMPL-CI-01/02) | **Deleted Phase 4** |
+| Profile-scoped item | Local | Staging/Prod | Notes |
+|---------------------|:-----:|:------------:|-------|
+| **Auth requirement** | TR-SEC-01L | TR-SEC-01 | DB-backed provider vs. managed IdP (Cognito) |
+| **Auth impl (backend)** | IMPL-BE-12 (`routers/auth.py`, `local_auth_service.py`, …) | IMPL-BE-03 Cognito path (`core/security.py`) | `deps.get_current_user_id` branches on `AUTH_PROVIDER` |
+| **Auth impl (frontend)** | `src/auth/local.ts` | `src/auth/cognito.ts` | `src/auth/index.ts` facade selects by `VITE_AUTH_PROVIDER` |
+| **Auth infra** | — (none) | IMPL-INF-04 (Cognito pool) | no cloud auth resource locally |
+| **Edge/hosting infra** | — (Vite dev server) | IMPL-INF-01/02/03/05/06/07 | AWS only |
+| **`users`/`auth_sessions` tables** | populated | present but empty | same schema both profiles |
+
+Everything else (data model, CRUD, dashboard, validation, logging, per-user
+isolation, code-quality gates) is profile-independent and applies to both.
+`TR-ENV-01/02/03` require exactly this: identical code, config-only differences,
+fully runnable and testable locally before any deployment.
 
 > Parity note: the new backend's integration suite runs for the first time in
 > CI (`ci.yml`, real Postgres). The removed code remains in git history if a
@@ -187,4 +197,4 @@ The old-architecture code has been **removed** — the migration is code-complet
 3. **After coding:** update any row here that changed (new file → add to §4; new component → §1; new requirement → upstream doc + §2/§3). Cite the IDs in the PR.
 4. **If something has no row:** stop. Add the missing requirement upstream first, or the change is out of scope.
 
-**Related documents:** [BUSINESS-REQUIREMENTS.md](BUSINESS-REQUIREMENTS.md) · [TECHNICAL-REQUIREMENTS.md](TECHNICAL-REQUIREMENTS.md) · [UPDATED-ARCHITECTURE.md](UPDATED-ARCHITECTURE.md) · [IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md) · [AI-CODING-AGENT-SYSTEM-PROMPT.md](AI-CODING-AGENT-SYSTEM-PROMPT.md)
+**Related documents:** [BUSINESS-REQUIREMENTS.md](BUSINESS-REQUIREMENTS.md) · [TECHNICAL-REQUIREMENTS.md](TECHNICAL-REQUIREMENTS.md) · [ARCHITECTURE.md](ARCHITECTURE.md) · [IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md) · [AI-CODING-AGENT-SYSTEM-PROMPT.md](AI-CODING-AGENT-SYSTEM-PROMPT.md)

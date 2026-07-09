@@ -1,87 +1,32 @@
 # Setup Guide
 
-How to run the Finance Tracker locally and where to go for deployment. This is
-the entry point; component-specific detail lives in each component's README.
+Where to go depending on what you want to do. Detail lives in the docs below so
+this stays a short index.
 
-## Prerequisites
+## Run & test the app locally (recommended first step — no AWS, no cost)
 
-- **Docker** (Postgres + the backend container)
-- **Node 20+** (frontend, infrastructure)
-- **Python 3.11+** (backend, if running it outside Docker)
-- **AWS CLI**, configured — needed to create the Cognito user pool (auth is real
-  even in local dev) and to deploy
-- A **Cognito user pool** — see [../backend/README.md](../backend/README.md) for
-  the exact `aws cognito-idp` commands and the `COGNITO_*` values they produce
-
-## 1. Configure environment
-
-Create a `.env` at the repo root (Docker Compose auto-loads it) with the Cognito
-values from the step above:
-
-```
-COGNITO_USER_POOL_ID=us-east-1_XXXXXXXXX
-COGNITO_APP_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
-COGNITO_REGION=us-east-1
-```
-
-For the frontend, copy `frontend/.env.example` to `frontend/.env.local` and set
-the matching `VITE_COGNITO_*` values (same pool/client).
-
-## 2. Run the backend + database
+Follow **[LOCAL-DEVELOPMENT.md](LOCAL-DEVELOPMENT.md)** — the full step-by-step to
+run Postgres + the FastAPI backend + the React frontend on your machine with the
+built-in local auth provider. In short:
 
 ```bash
 docker compose up -d postgres
-docker compose run --rm backend alembic upgrade head   # apply schema + seed categories
-docker compose up backend                              # → http://localhost:8000
+docker compose run --rm backend alembic upgrade head
+docker compose up backend                 # http://localhost:8000
+cd frontend && npm install && npm run dev  # http://localhost:5173
 ```
 
-Smoke test (unauthenticated endpoints):
+Register a username/password in the UI and you're in. `make test` / `make lint`
+run all component checks.
 
-```bash
-curl http://localhost:8000/health
-curl http://localhost:8000/health/ready
-```
+## Deploy to AWS (staging/production)
 
-For an authenticated request, get an access token via
-`aws cognito-idp initiate-auth` (see [../backend/README.md](../backend/README.md))
-and pass it as `Authorization: Bearer <token>`.
+- **[../infrastructure/README.md](../infrastructure/README.md)** — provision the
+  AWS infrastructure with CDK and deploy.
+- **[../backend/README.md](../backend/README.md)** — create the Cognito user pool
+  used by the staging/production auth profile.
 
-## 3. Run the frontend
+## Understand the system
 
-```bash
-cd frontend
-npm install
-npm run dev        # → http://localhost:5173, proxies /api to the backend on :8000
-```
-
-Sign up in the UI (Cognito emails a confirmation code), confirm, then sign in.
-
-## 4. Tests & checks
-
-```bash
-make test          # backend (pytest, needs the Postgres container), frontend (vitest), infra (jest)
-make lint          # ruff/mypy + eslint/prettier/tsc across all components
-```
-
-The backend integration tests need a `finance_tracker_test` database:
-
-```bash
-docker exec -it finance-tracker-db psql -U finance_user -d finance_tracker \
-  -c "CREATE DATABASE finance_tracker_test;"
-```
-
-## 5. Deploy
-
-Infrastructure is AWS CDK; deployment (and the CI/CD pipelines that automate it)
-is documented in [../infrastructure/README.md](../infrastructure/README.md).
-
-## Troubleshooting
-
-- **Backend exits immediately on start** — a required env var is missing. The app
-  fails closed by design (no default secrets); check `COGNITO_*` and `DATABASE_URL`.
-- **401 on every `/api` call** — the access token is missing, expired, or from a
-  different Cognito pool/client than the backend is configured for.
-- **Port already in use** — `lsof -i :8000` (or `:5432`, `:5173`) then stop the
-  offending process, or `docker compose down`.
-- **DB connection refused** — ensure the `postgres` container is healthy:
-  `docker ps | grep finance-tracker-db`.
+Start at the repo **[../README.md](../README.md)**, then the governance docs it
+links (requirements → architecture → implementation → traceability).

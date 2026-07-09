@@ -1,15 +1,20 @@
 import { type FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { confirmSignUp, signIn, signUp } from '../auth/cognito';
+import { confirmSignUp, requiresConfirmation, signIn, signUp } from '../auth';
 import { useAppDispatch } from '../store/hooks';
 import { authenticated } from '../store/slices/authSlice';
 import './Login.css';
 
 type Mode = 'signIn' | 'signUp' | 'confirm';
 
+// The identity field is an email for the Cognito provider and a username for the
+// local provider.
+const identityLabel = requiresConfirmation ? 'Email Address' : 'Username';
+const identityType = requiresConfirmation ? 'email' : 'text';
+
 function messageFor(err: unknown, fallback: string): string {
-  // amazon-cognito-identity-js errors carry a user-safe `message`.
+  // Both providers surface a user-safe `message` on their errors.
   if (err instanceof Error && err.message) {
     return err.message;
   }
@@ -44,8 +49,13 @@ export default function Login() {
         await completeSignIn();
       } else if (mode === 'signUp') {
         await signUp(email, password);
-        setMode('confirm');
-        setInfo('We emailed you a confirmation code. Enter it below to finish signing up.');
+        if (requiresConfirmation) {
+          setMode('confirm');
+          setInfo('We emailed you a confirmation code. Enter it below to finish signing up.');
+        } else {
+          // Local provider: no email confirmation — sign in immediately.
+          await completeSignIn();
+        }
       } else {
         await confirmSignUp(email, code);
         await completeSignIn();
@@ -82,13 +92,13 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="identity">{identityLabel}</label>
             <input
-              id="email"
-              type="email"
+              id="identity"
+              type={identityType}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
+              placeholder={`Enter your ${identityLabel.toLowerCase()}`}
               required
               disabled={loading || mode === 'confirm'}
             />

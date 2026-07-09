@@ -43,7 +43,9 @@ def db_session() -> Generator[Session, None, None]:
         yield session
     finally:
         session.rollback()
-        session.execute(text("TRUNCATE expenses, investments RESTART IDENTITY CASCADE"))
+        session.execute(
+            text("TRUNCATE expenses, investments, auth_sessions, users RESTART IDENTITY CASCADE")
+        )
         session.execute(text("DELETE FROM categories WHERE is_predefined = false"))
         session.commit()
         session.close()

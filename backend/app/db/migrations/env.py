@@ -7,10 +7,12 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from app.core.config import settings
+from app.models.auth_session import AuthSession  # noqa: F401
 from app.models.base import Base
 from app.models.category import Category  # noqa: F401
 from app.models.expense import Expense  # noqa: F401
 from app.models.investment import Investment  # noqa: F401
+from app.models.user import User  # noqa: F401
 
 config = context.config
 
