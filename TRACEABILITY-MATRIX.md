@@ -27,22 +27,26 @@ If you change anything in that chain, you update this file in the **same** chang
 
 ## 1. Architecture Component Catalog (ARCH)
 
-| ARCH ID | Component | Where in architecture |
+Section numbers below are the current `ARCHITECTURE.md` sections
+(§1 Overview · §2 Components · §3 Deployment profiles · §4 Authentication ·
+§5 Request & data flow · §6 Security model · §7 Networking & data · §8 Cost).
+
+| ARCH ID | Component | Where in ARCHITECTURE.md |
 |---------|-----------|------------------------|
-| **ARCH-01** | Route 53 (DNS) | ARCHITECTURE.md §2 |
-| **ARCH-02** | CloudFront distribution (TLS/ACM, edge cache, security headers/CSP) | §2, §5 |
-| **ARCH-03** | AWS WAF (managed rules, rate-based) | §2, §5 |
+| **ARCH-01** | Route 53 (DNS) | §1, §2 |
+| **ARCH-02** | CloudFront distribution (TLS/ACM, edge cache, security headers/CSP) | §2, §6 |
+| **ARCH-03** | AWS WAF (managed rules, rate-based) | §2, §6 |
 | **ARCH-04** | S3 static origin (private, OAC) — SPA hosting | §2 |
-| **ARCH-05** | API Gateway HTTP API | §2, §4 |
-| **ARCH-06** | Cognito user pool + JWT authorizer | §2, §4, §5 |
-| **ARCH-07** | Lambda (FastAPI via Mangum) — backend | §2 |
-| **ARCH-08** | RDS Proxy (connection pooling) | §2, §6 |
-| **ARCH-09** | RDS PostgreSQL (Multi-AZ, encrypted) | §2, §6 |
-| **ARCH-10** | Secrets Manager / SSM | §5, §6 |
-| **ARCH-11** | CloudWatch + X-Ray (observability) | §5 |
-| **ARCH-12** | VPC / subnets / security groups (network isolation) | §5, §6 |
-| **ARCH-13** | Infrastructure-as-Code (CDK/CloudFormation) | §8 |
-| **ARCH-14** | CI/CD pipeline | §8 |
+| **ARCH-05** | API Gateway HTTP API | §2, §5 |
+| **ARCH-06** | Cognito user pool + JWT authorizer | §2, §4 |
+| **ARCH-07** | Lambda (FastAPI via Mangum) — backend | §2, §5 |
+| **ARCH-08** | RDS Proxy (connection pooling) | §2, §7 |
+| **ARCH-09** | RDS PostgreSQL (Multi-AZ, encrypted) | §2, §7 |
+| **ARCH-10** | Secrets Manager / SSM | §2, §6 |
+| **ARCH-11** | CloudWatch + X-Ray (observability) | §2 |
+| **ARCH-12** | VPC / subnets / security groups (network isolation) | §2, §6, §7 |
+| **ARCH-13** | Infrastructure-as-Code (CDK) | §2 |
+| **ARCH-14** | CI/CD pipeline | §2 |
 | **ARCH-15** | Auth provider abstraction (local / Cognito, by config) | §2, §4 |
 
 ---
@@ -63,7 +67,7 @@ If you change anything in that chain, you update this file in the **same** chang
 | **BR-10** | Filter & search | ARCH-05/07 | IMPL-FE-07, IMPL-BE-04/05 | `components/Filters/`, expense/investment repos |
 | **BR-11** | Edit & delete entries | ARCH-05/07/09 | IMPL-FE-03/04, IMPL-BE-04/05 | feature modules + routers |
 | **BR-12** | Budgets & alerts *(Could)* | ARCH-07/09 | IMPL-BE-11 | `categories.py`/budgets (stubbed now) |
-| **BR-13** | Strict data privacy | ARCH-06/07/09 | IMPL-BE-03, IMPL-BE-04/05 | `api/deps.py`, repositories (scoped to `sub`) |
+| **BR-13** | Strict data privacy | ARCH-06/07/09 | IMPL-BE-03, IMPL-BE-04/05 | `api/deps.py`, repositories (scoped to the authenticated user id) |
 | **BR-14** | Export data *(Could)* | ARCH-07 | IMPL-BE-04/05 | export endpoint (later) |
 | **BR-15** | Web, multi-device access | ARCH-01/02/04 | IMPL-FE-02, IMPL-INF-02/03 | SPA + edge hosting |
 | **BR-NF-01** | Trustworthy with money data | ARCH-09/10/12 | IMPL-BE-07/08, IMPL-INF-06 | see TR-SEC / TR-REL rows below |
@@ -129,11 +133,11 @@ If you change anything in that chain, you update this file in the **same** chang
 
 ## 4. Implementation → Codebase (reverse lookup)
 
-Use this to answer "what does this file serve?" before changing it. *Target paths (some not yet created — see build order in IMPLEMENTATION-PLAN §7).*
+Use this to answer "what does this file serve?" before changing it. *All units below are implemented; a few realised paths differ from the idealised layout — see the row notes and IMPLEMENTATION-PLAN.md §7 (build & run order).*
 
 | IMPL | Target path(s) | Serves (BR/TR) | Status |
 |------|----------------|----------------|--------|
-| IMPL-FE-01 | `frontend/src/auth/cognito.ts` | BR-01, BR-13, TR-SEC-01/14 | **Implemented (Phase 2)** |
+| IMPL-FE-01 | `frontend/src/auth/` (`index.ts` facade, `local.ts`, `cognito.ts`) | BR-01, BR-13, TR-SEC-01/01L/14 | **Implemented** — provider chosen by `VITE_AUTH_PROVIDER` |
 | IMPL-FE-02 | `frontend/src/api/client.ts` (+ `api/*.ts`, `api/mappers.ts`) | BR-15, TR-SEC-10, TR-REL-02 | **Implemented (Phase 2)** |
 | IMPL-FE-03 | `frontend/src/pages/Expenses.tsx`, `api/expenses.ts`, `store/slices/expenseSlice.ts` | BR-02/03/10/11, TR-SEC-04 | **Implemented (Phase 2)** — realised in `pages/` not `features/` (see plan note) |
 | IMPL-FE-04 | `frontend/src/pages/Investments.tsx`, `api/investments.ts`, `store/slices/investmentSlice.ts` | BR-04/11 | **Implemented (Phase 2)** — `pages/` not `features/` |
@@ -142,12 +146,12 @@ Use this to answer "what does this file serve?" before changing it. *Target path
 | IMPL-FE-07 | `frontend/src/components/Filters/` | BR-10 | **Implemented (Phase 2)** — expenses filter bar |
 | IMPL-FE-08 | `frontend/src/store/` | BR-* state | **Implemented (Phase 2)** |
 | IMPL-BE-01 | `backend/app/main.py` | ARCH-07, TR-REL-02, TR-PERF-06 | **Implemented (Phase 1)** |
-| IMPL-BE-02 | `backend/app/core/config.py` | TR-SEC-03, TR-CQ-08 | **Implemented (Phase 1)** |
-| IMPL-BE-03 | `backend/app/core/security.py`, `backend/app/api/deps.py` | TR-SEC-02, BR-13, TR-DAT-01 | **Implemented (Phase 1)** — see IMPLEMENTATION-PLAN.md §3 note (deviation #2: full JWKS verification, not passthrough) |
+| IMPL-BE-02 | `backend/app/core/config.py` | TR-SEC-03, TR-CQ-08, TR-ENV-02/03 | **Implemented** — separate `DB_*` vars → `database_url`; `auth_provider` with fail-closed Cognito validation |
+| IMPL-BE-03 | `backend/app/core/security.py`, `backend/app/api/deps.py` | TR-SEC-01/01L/02, BR-13, TR-DAT-01 | **Implemented** — `get_current_user_id` branches on `AUTH_PROVIDER`: Cognito JWKS verification, or local opaque-token resolution |
 | IMPL-BE-04 | `backend/app/api/routers/expenses.py`, `services/expense_service.py`, `repositories/expense_repo.py` | BR-02/03/05/10/11, TR-PERF-04 | **Implemented (Phase 1)** |
 | IMPL-BE-05 | `backend/app/api/routers/investments.py`, `services/investment_service.py`, `repositories/investment_repo.py` | BR-04/06/11 | **Implemented (Phase 1)** |
 | IMPL-BE-06 | `backend/app/api/routers/dashboard.py`, `services/analytics_service.py` | BR-07/08/09, TR-PERF-03/05 | **Implemented (Phase 1)** |
-| IMPL-BE-07 | `backend/app/models/`, `backend/app/db/migrations/` | ARCH-09, TR-DAT-03 | **Implemented (Phase 1)** — see IMPLEMENTATION-PLAN.md §3 note (deviation #1: no local `users` table) |
+| IMPL-BE-07 | `backend/app/models/` (expense, investment, category, user, auth_session), `backend/app/db/migrations/` | ARCH-09, TR-DAT-03 | **Implemented** — `users`/`auth_sessions` added for the local auth provider (migration `0002`) |
 | IMPL-BE-08 | `backend/app/db/session.py` | ARCH-08, TR-PERF-03, TR-REL-06 | **Implemented (Phase 1)** |
 | IMPL-BE-09 | `backend/app/schemas/` | TR-SEC-04, TR-PERF-04 | **Implemented (Phase 1)** |
 | IMPL-BE-10 | `backend/app/core/logging.py`, `backend/app/core/errors.py` | TR-OBS-01, TR-REL-02, TR-SEC-10/13 | **Implemented (Phase 1)** |
@@ -184,9 +188,9 @@ isolation, code-quality gates) is profile-independent and applies to both.
 `TR-ENV-01/02/03` require exactly this: identical code, config-only differences,
 fully runnable and testable locally before any deployment.
 
-> Parity note: the new backend's integration suite runs for the first time in
-> CI (`ci.yml`, real Postgres). The removed code remains in git history if a
-> parity gap surfaces.
+> Testing note: the backend integration suite runs against a real Postgres both
+> locally (LOCAL-DEVELOPMENT.md §4) and in CI (`ci.yml`), exercising cross-user
+> isolation and the local auth flow end-to-end.
 
 ---
 

@@ -60,12 +60,12 @@ finance-tracker-app/
 │   ├── app/
 │   │   ├── main.py                  # FastAPI app + Mangum handler   [IMPL-BE-01]
 │   │   ├── core/
-│   │   │   ├── config.py            # pydantic-settings, secrets     [IMPL-BE-02]
+│   │   │   ├── config.py            # settings + DB_* + provider     [IMPL-BE-02]
 │   │   │   ├── security.py          # claims extraction helpers      [IMPL-BE-03]
 │   │   │   ├── logging.py           # structured logging             [IMPL-BE-10]
 │   │   │   └── errors.py            # exception types + handlers     [IMPL-BE-10]
 │   │   ├── api/
-│   │   │   ├── deps.py              # auth dependency (verified sub)  [IMPL-BE-03]
+│   │   │   ├── deps.py              # auth dependency (user id)       [IMPL-BE-03]
 │   │   │   └── routers/
 │   │   │       ├── health.py        # health/readiness
 │   │   │       ├── expenses.py      # expense endpoints              [IMPL-BE-04]
@@ -139,8 +139,8 @@ finance-tracker-app/
 | **IMPL-BE-02** | `app/core/config.py` | Typed settings via `pydantic-settings`; assembles the DB DSN from separate `DB_*` vars; selects `auth_provider`; **fails closed** per profile (cognito profile requires `COGNITO_*`) | TR-SEC-03, TR-ENV-02/03, TR-CQ-08 | No literal secret defaults; `database_url` is a computed property. |
 | **IMPL-BE-03** | `app/api/deps.py`, `app/core/security.py` | `get_current_user_id` resolves the caller's trusted user id from the active provider — verify Cognito JWT via JWKS (cognito), or resolve the opaque session token (local); reject if absent | **TR-SEC-02**, BR-13 | Identity from the token/session only, never body/query. |
 | **IMPL-BE-12** | `routers/auth.py`, `services/local_auth_service.py`, `core/passwords.py`, `core/rate_limit.py`, `models/user.py`, `models/auth_session.py`, `schemas/auth.py` | **[Local profile]** DB-backed auth: register/login/logout/me; bcrypt passwords; SHA-256-hashed session tokens; per-IP rate limiting. Mounted only when `auth_provider=local` | **TR-SEC-01L**, BR-01, TR-ENV-01 | No unauthenticated surface in the cognito profile. |
-| **IMPL-BE-04** | `routers/expenses.py`, `services/expense_service.py`, `repositories/expense_repo.py` | Expense CRUD + list/filter, all scoped to `sub` | BR-02/03/05/10/11, TR-DAT-01 | Repo filters every query by `user_id == sub`. Pagination per TR-PERF-04. |
-| **IMPL-BE-05** | `routers/investments.py`, `services/investment_service.py`, `repositories/investment_repo.py` | Investment CRUD + summary, scoped to `sub` | BR-04/06/11, TR-DAT-01 | — |
+| **IMPL-BE-04** | `routers/expenses.py`, `services/expense_service.py`, `repositories/expense_repo.py` | Expense CRUD + list/filter, all scoped to the user id | BR-02/03/05/10/11, TR-DAT-01 | Repo filters every query by `user_id`. Pagination per TR-PERF-04. |
+| **IMPL-BE-05** | `routers/investments.py`, `services/investment_service.py`, `repositories/investment_repo.py` | Investment CRUD + summary, scoped to the user id | BR-04/06/11, TR-DAT-01 | — |
 | **IMPL-BE-06** | `routers/dashboard.py`, `services/analytics_service.py` | Aggregations: period totals, month-over-month trend, category breakdown | BR-07/08/09 | Aggregate in SQL (indexed), not in Python loops (TR-PERF-03/05). |
 | **IMPL-BE-07** | `models/*.py`, `db/migrations/` | ORM entities (Expense, Investment, Category; User + AuthSession for the local provider) + Alembic migrations | ARCH-09, BR-02/04 | Indexes lead with `user_id` for filters/trends. |
 | **IMPL-BE-08** | `db/session.py` | SQLAlchemy engine/session through **RDS Proxy**; per-invocation session lifecycle | ARCH-08, TR-PERF-03, TR-REL-06 | Pooling via proxy; explicit timeouts. |
