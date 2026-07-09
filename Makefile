@@ -25,8 +25,10 @@ migrate:
 	docker compose run --rm backend alembic upgrade head
 
 # --- Tests ---
+# Backend tests run on the host against the compose Postgres — host port 5433 by
+# default (override with POSTGRES_HOST_PORT). See docs/LOCAL-DEVELOPMENT.md §4.
 test-backend:
-	cd backend && pytest
+	cd backend && DB_PORT=$${POSTGRES_HOST_PORT:-5433} pytest
 
 test-frontend:
 	cd frontend && npm test

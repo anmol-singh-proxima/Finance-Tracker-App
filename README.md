@@ -42,9 +42,10 @@ finance-tracker-app/
 
 ## Quick start (local)
 
-Prerequisites: Docker, Node 20+, Python 3.11+, and a **Cognito user pool** (auth
-is real even locally — [backend/README.md](backend/README.md) has the exact AWS
-CLI to create one and set `COGNITO_*`).
+Prerequisites: Docker, Node 20+, Python 3.11+. **No AWS or Cognito needed** — local
+dev uses the built-in DB-backed auth provider (`AUTH_PROVIDER=local`); Cognito is
+only for staging/production. Full walkthrough:
+[docs/LOCAL-DEVELOPMENT.md](docs/LOCAL-DEVELOPMENT.md).
 
 ```bash
 # 1. Backend + Postgres

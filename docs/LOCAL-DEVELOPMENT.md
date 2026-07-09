@@ -10,7 +10,7 @@ AWS account and no cost**. This is the required first step before any deployment
 
 | Component | How it runs locally | Port |
 |-----------|--------------------|------|
-| Database | Postgres via docker-compose | 5432 |
+| Database | Postgres via docker-compose | 5433 host → 5432 container |
 | Backend | FastAPI via docker-compose (uvicorn) | 8000 |
 | Frontend | Vite dev server (`npm run dev`), proxies `/api` → backend | 5173 |
 | Auth | **Local provider** — username/password stored in Postgres | — |
@@ -92,7 +92,7 @@ confirmation in the local profile), then you're signed in. The SPA proxies
 docker exec -it finance-tracker-db psql -U finance_user -d finance_tracker \
   -c "CREATE DATABASE finance_tracker_test;"
 cd backend && python -m venv .venv && source .venv/bin/activate && pip install -e ".[dev]"
-pytest                          # unit + integration against real Postgres
+DB_PORT=5433 pytest             # unit + integration vs. the compose Postgres (host port 5433)
 
 # Frontend:
 cd ../frontend && npm test      # vitest
@@ -116,8 +116,15 @@ for deploying.
 - **Backend exits immediately** — a required env var is missing (fail-closed by
   design). Locally, `docker-compose.yml` provides them; outside Docker, set the
   `DB_*` vars (see `backend/.env.example`).
-- **Port already in use** — `lsof -i :8000` (or `:5432`, `:5173`); stop the
-  process or `docker compose down`.
+- **`bind: address already in use` on 5432 when starting Postgres** — you already
+  have a **native PostgreSQL running on the host's 5432**. The compose database
+  therefore publishes on host port **5433** by default (its container port stays
+  5432, so the backend is unaffected). Pick a different host port with
+  `POSTGRES_HOST_PORT=<port> docker compose up -d postgres`, or free 5432 by
+  stopping the native server. Host-side tools (psql, host-run pytest) connect on
+  **5433**.
+- **Port already in use (8000 / 5433 / 5173)** — `lsof -i :8000` (or `:5433`,
+  `:5173`); stop the process or `docker compose down`.
 - **`429 Too Many Requests` on login** — the per-IP rate limit tripped; wait for
   the window (default 5 min) or restart the backend to reset it.
 - **`401` right after login** — the token expired (default 24h) or the backend

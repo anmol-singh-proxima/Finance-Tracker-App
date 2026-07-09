@@ -1,8 +1,10 @@
 # Local development stack for the target architecture: Postgres + the FastAPI
 # backend. The frontend runs separately via Vite (`cd frontend && npm run dev`),
-# proxying /api to the backend on :8000. Cognito is a real AWS resource — see
-# backend/README.md for how to create a pool and set COGNITO_* (from a root .env,
-# which Compose auto-loads).
+# proxying /api to the backend on :8000. Local dev uses the DB-backed auth
+# provider (AUTH_PROVIDER=local) — no AWS or Cognito required. The database's
+# HOST port defaults to 5433 so it won't clash with a native Postgres already on
+# 5432; override with POSTGRES_HOST_PORT. The container port stays 5432, so the
+# backend (DB_HOST=postgres, DB_PORT=5432) is unaffected either way.
 services:
   # PostgreSQL Database
   postgres:
@@ -13,7 +15,9 @@ services:
       - POSTGRES_PASSWORD=finance_password
       - POSTGRES_DB=finance_tracker
     ports:
-      - '5432:5432'
+      # host:container — host defaults to 5433 (override via POSTGRES_HOST_PORT)
+      # to avoid colliding with a native Postgres on 5432. Container stays 5432.
+      - '${POSTGRES_HOST_PORT:-5433}:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -50,8 +54,15 @@ services:
     networks:
       - finance-network
     volumes:
-      - ./backend/app:/app/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      # LAMBDA_TASK_ROOT (the base image's WORKDIR) is /var/task — must match here
+      # for the bind mount (and --reload) to actually affect the running app.
+      - ./backend/app:/var/task/app
+    # The Lambda base image bakes in ENTRYPOINT=/lambda-entrypoint.sh, which parses
+    # its first argument as a `module.handler` string (matching the Dockerfile's
+    # Lambda CMD). Clear it so `command` below runs uvicorn directly for local dev
+    # instead of being rejected as an invalid handler name.
+    entrypoint: []
+    command: ['uvicorn', 'app.main:app', '--host', '0.0.0.0', '--port', '8000', '--reload']
 
 volumes:
   postgres_data:
