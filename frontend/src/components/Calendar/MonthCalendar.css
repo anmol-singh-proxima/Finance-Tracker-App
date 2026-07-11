@@ -1,0 +1,224 @@
+.month-calendar {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.cal-weekdays,
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.cal-weekday {
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-light);
+  background-color: var(--surface-muted);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.cal-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 112px;
+  padding: 8px;
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  transition: background-color 150ms ease;
+}
+
+.cal-cell:nth-child(7n) {
+  border-right: none;
+}
+
+/* Last row: rely on the container border. */
+.cal-grid .cal-cell:nth-last-child(-n + 7) {
+  border-bottom: none;
+}
+
+.cal-cell.is-blank {
+  background-color: var(--surface-muted);
+}
+
+.cal-cell:not(.is-blank):hover {
+  background-color: var(--surface-hover);
+}
+
+.cal-cell.is-today .cal-date {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+.cal-cell-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.cal-date {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 4px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.cal-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background-color: var(--primary-soft);
+  color: var(--primary-color);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.cal-total {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.cal-preview {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.cal-preview li {
+  font-size: 11px;
+  color: var(--text-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cal-preview-more {
+  font-weight: 500;
+}
+
+.cal-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: auto;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+/* Reveal on pointer hover or when a cell button has keyboard focus. */
+.cal-cell:hover .cal-actions,
+.cal-cell:focus-within .cal-actions {
+  opacity: 1;
+}
+
+.cal-action {
+  flex: 1;
+  padding: 4px 6px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-color);
+}
+
+.cal-action:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* Hidden on desktop/tablet; becomes the whole-cell tap target on phones. */
+.cal-cell-tap {
+  display: none;
+}
+
+@media (hover: none) {
+  /* No hover on touch devices — keep the action buttons always visible. */
+  .cal-actions {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cal-cell,
+  .cal-actions {
+    transition: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .cal-weekday {
+    padding: 8px 2px;
+    font-size: 10px;
+  }
+
+  .cal-cell {
+    min-height: 64px;
+    padding: 4px;
+    gap: 2px;
+  }
+
+  .cal-cell-tap {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .cal-cell-tap:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .cal-date {
+    min-width: 20px;
+    height: 20px;
+    font-size: 11px;
+  }
+
+  .cal-count {
+    min-width: 14px;
+    height: 14px;
+    padding: 0 4px;
+    font-size: 9px;
+  }
+
+  .cal-total {
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cal-preview,
+  .cal-actions {
+    display: none;
+  }
+}

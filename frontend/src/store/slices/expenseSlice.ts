@@ -43,6 +43,13 @@ const expenseSlice = createSlice({
       state.items.unshift(action.payload);
       state.totalAmount += action.payload.amount;
     },
+    updated: (state, action: PayloadAction<Expense>) => {
+      const index = state.items.findIndex((exp) => exp.id === action.payload.id);
+      if (index !== -1) {
+        state.totalAmount += action.payload.amount - state.items[index]!.amount;
+        state.items[index] = action.payload;
+      }
+    },
     removed: (state, action: PayloadAction<string>) => {
       const index = state.items.findIndex((exp) => exp.id === action.payload);
       if (index !== -1) {
@@ -53,5 +60,6 @@ const expenseSlice = createSlice({
   },
 });
 
-export const { fetchStart, fetchSuccess, fetchError, added, removed } = expenseSlice.actions;
+export const { fetchStart, fetchSuccess, fetchError, added, updated, removed } =
+  expenseSlice.actions;
 export default expenseSlice.reducer;

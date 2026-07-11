@@ -70,6 +70,7 @@ Section numbers below are the current `ARCHITECTURE.md` sections
 | **BR-13** | Strict data privacy | ARCH-06/07/09 | IMPL-BE-03, IMPL-BE-04/05 | `api/deps.py`, repositories (scoped to the authenticated user id) |
 | **BR-14** | Export data *(Could)* | ARCH-07 | IMPL-BE-04/05 | export endpoint (later) |
 | **BR-15** | Web, multi-device access | ARCH-01/02/04 | IMPL-FE-02, IMPL-INF-02/03 | SPA + edge hosting |
+| **BR-16** | Calendar-based expense management | ARCH-04/05/07 | IMPL-FE-09, IMPL-FE-03, IMPL-BE-04 | `frontend/src/components/Calendar/`, `components/Dialogs/`, `utils/calendar.ts`, `pages/Expenses.tsx` (reuses the existing expense endpoints) |
 | **BR-NF-01** | Trustworthy with money data | ARCH-09/10/12 | IMPL-BE-07/08, IMPL-INF-06 | see TR-SEC / TR-REL rows below |
 | **BR-NF-02** | Fast & responsive | ARCH-02/08 | IMPL-FE-06, IMPL-BE-06/08 | see TR-PERF rows below |
 | **BR-NF-03** | Always available | ARCH-09/12 | IMPL-INF-01/06 | see TR-REL rows below |
@@ -139,12 +140,13 @@ Use this to answer "what does this file serve?" before changing it. *All units b
 |------|----------------|----------------|--------|
 | IMPL-FE-01 | `frontend/src/auth/` (`index.ts` facade, `local.ts`, `cognito.ts`) | BR-01, BR-13, TR-SEC-01/01L/14 | **Implemented** — provider chosen by `VITE_AUTH_PROVIDER` |
 | IMPL-FE-02 | `frontend/src/api/client.ts` (+ `api/*.ts`, `api/mappers.ts`) | BR-15, TR-SEC-10, TR-REL-02 | **Implemented (Phase 2)** |
-| IMPL-FE-03 | `frontend/src/pages/Expenses.tsx`, `api/expenses.ts`, `store/slices/expenseSlice.ts` | BR-02/03/10/11, TR-SEC-04 | **Implemented (Phase 2)** — realised in `pages/` not `features/` (see plan note) |
+| IMPL-FE-03 | `frontend/src/pages/Expenses.tsx`, `api/expenses.ts`, `store/slices/expenseSlice.ts` | BR-02/03/10/11/16, TR-SEC-04 | **Implemented (Phase 5)** — calendar-based month view; page owns loading/saving, calendar components (IMPL-FE-09) are presentational |
 | IMPL-FE-04 | `frontend/src/pages/Investments.tsx`, `api/investments.ts`, `store/slices/investmentSlice.ts` | BR-04/11 | **Implemented (Phase 2)** — `pages/` not `features/` |
 | IMPL-FE-05 | `frontend/src/pages/Dashboard.tsx`, `api/dashboard.ts` | BR-05/06/07 | **Implemented (Phase 2)** |
 | IMPL-FE-06 | `frontend/src/charts/` | BR-08/09, TR-PERF-02 | **Implemented (Phase 2)** |
-| IMPL-FE-07 | `frontend/src/components/Filters/` | BR-10 | **Implemented (Phase 2)** — expenses filter bar |
+| IMPL-FE-07 | `frontend/src/components/Filters/` | BR-10 | **Implemented (Phase 5)** — category filter for the expense calendar; the date-range dimension is realised by the calendar's month navigation (IMPL-FE-09) |
 | IMPL-FE-08 | `frontend/src/store/` | BR-* state | **Implemented (Phase 2)** |
+| IMPL-FE-09 | `frontend/src/components/Calendar/` (`MonthCalendar`, `DayViewDialog`, `DayEditDialog`), `components/Dialogs/` (`Modal`, `ConfirmDialog`), `utils/calendar.ts` | BR-16, BR-02/05/11 | **Implemented (Phase 5)** — month-grid calendar UI + accessible dialogs; calendar math unit-tested (`utils/calendar.test.ts`) |
 | IMPL-BE-01 | `backend/app/main.py` | ARCH-07, TR-REL-02, TR-PERF-06 | **Implemented (Phase 1)** |
 | IMPL-BE-02 | `backend/app/core/config.py` | TR-SEC-03, TR-CQ-08, TR-ENV-02/03 | **Implemented** — separate `DB_*` vars → `database_url`; `auth_provider` with fail-closed Cognito validation |
 | IMPL-BE-03 | `backend/app/core/security.py`, `backend/app/api/deps.py` | TR-SEC-01/01L/02, BR-13, TR-DAT-01 | **Implemented** — `get_current_user_id` branches on `AUTH_PROVIDER`: Cognito JWKS verification, or local opaque-token resolution |

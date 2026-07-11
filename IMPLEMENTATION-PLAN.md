@@ -115,6 +115,7 @@ finance-tracker-app/
 | **IMPL-FE-06** | `src/charts/` | Trend (over time) and category-breakdown visualizations | BR-08, BR-09 | Charting lib (e.g. Recharts). Render server-aggregated data; don't compute heavy aggregates client-side. |
 | **IMPL-FE-07** | `src/components/Filters/` | Date-range + category filter/search controls | BR-10 | Drives query params to list endpoints. |
 | **IMPL-FE-08** | `src/store/` | Redux Toolkit slices (auth, expenses, investments, ui) | BR-* (state) | RTK Query optional for caching `/api` reads. |
+| **IMPL-FE-09** | `src/components/Calendar/`, `src/components/Dialogs/`, `src/utils/calendar.ts` | Month-view expense calendar: grid + day cells, day View/Edit dialogs, delete confirmation, accessible modal base | BR-16, BR-02/05/11 | Calendar math is pure/unit-tested; dialogs stage edits and apply them only on Save. Follows UI-UX-DESIGN-STANDARDS.md. |
 | — | `src/pages/`, `src/components/` | Route screens & shared UI | BR-15 | React Router routes guarded by auth state. |
 
 **Frontend standards (TR-CQ-02):** TypeScript; ESLint + Prettier run independently; never bypass React auto-escaping (no unsanitized `dangerouslySetInnerHTML`, supports TR-SEC-06).
@@ -123,6 +124,7 @@ finance-tracker-app/
 > - **Pluggable auth (IMPL-FE-01).** `src/auth/` holds a small facade (`index.ts`) selecting the provider by `VITE_AUTH_PROVIDER`: `local.ts` (DB-backed, calls the backend `/api/auth/*`, default for local dev) or `cognito.ts` (Amazon Cognito, staging/prod). The rest of the app imports only the facade. Tokens are stored in localStorage (session persistence across reloads); the XSS exposure is mitigated by React auto-escaping (no unsanitised HTML) and the CloudFront CSP (TR-SEC-06); tokens are never logged (TR-SEC-10).
 > - **`pages/` instead of a separate `features/` layer** for IMPL-FE-03/04/05. For three screens, a `features/<domain>/` split on top of `pages/` would be premature structure (TR-CQ-03). Screen components live in `pages/`; the domain's I/O and state live in `api/*` and `store/slices/*`.
 > - **Charts (IMPL-FE-06, BR-08/09) and filters (IMPL-FE-07, BR-10)** render server-aggregated data from `/dashboard/trends`, `/dashboard/breakdown`, and the list-filter params.
+> - **Calendar UI (IMPL-FE-09, BR-16).** The Expenses screen is a month-view calendar (`pages/Expenses.tsx` + `components/Calendar/`) rather than a flat list. The page owns data loading (one `/expenses?date_from&date_to` fetch per month) and save orchestration; `MonthCalendar`, `DayViewDialog`, `DayEditDialog`, and the `Dialogs/Modal` base are presentational. For expenses, BR-10's date-range dimension is realised by the month navigation and the category dimension by `components/Filters/` (IMPL-FE-07), now a category-only control.
 > - **Cognito profile only:** the App Client must allow `ALLOW_USER_SRP_AUTH` (the browser SDK uses SRP); see `backend/README.md`.
 
 ---

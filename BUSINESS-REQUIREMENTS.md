@@ -47,6 +47,7 @@ A personal finance tracker that lets an individual record their day-to-day spend
 | **BR-13** | Strict data privacy | A user can only ever see and modify **their own** financial data — never another user's. This is a hard product guarantee. | M |
 | **BR-14** | Export data | A user can export their expenses/investments (e.g. CSV) for their own records. | C |
 | **BR-15** | Web, multi-device access | The app is usable from a modern web browser on desktop and mobile, without installing anything. | M |
+| **BR-16** | Calendar-based expense management | A user manages expenses through a **month-view calendar** (like Google/Apple Calendar): pick any month/year, see each day's expense count and total at a glance, and open any day to **view** its expenses in a table or **edit** them in place (modify, add, delete — with confirmation before deleting). Changes appear immediately without a page refresh. | S |
 
 ---
 

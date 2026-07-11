@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { Expense } from '../../types/domain';
-import reducer, { added, fetchSuccess, removed } from './expenseSlice';
+import reducer, { added, fetchSuccess, removed, updated } from './expenseSlice';
 
 const expense = (id: string, amount: number): Expense => ({
   id,
@@ -31,6 +31,20 @@ describe('expenseSlice', () => {
     const next = reducer(start, removed('a'));
     expect(next.items.map((e) => e.id)).toEqual(['b']);
     expect(next.totalAmount).toBe(20);
+  });
+
+  it('updates an expense in place and adjusts the total', () => {
+    const start = reducer(undefined, fetchSuccess([expense('a', 10), expense('b', 20)]));
+    const next = reducer(start, updated({ ...expense('a', 15), description: 'Groceries' }));
+    expect(next.items[0]).toMatchObject({ id: 'a', amount: 15, description: 'Groceries' });
+    expect(next.totalAmount).toBe(35);
+  });
+
+  it('ignores an update for an unknown id', () => {
+    const start = reducer(undefined, fetchSuccess([expense('a', 10)]));
+    const next = reducer(start, updated(expense('ghost', 99)));
+    expect(next.items).toHaveLength(1);
+    expect(next.totalAmount).toBe(10);
   });
 
   it('ignores removal of an unknown id', () => {

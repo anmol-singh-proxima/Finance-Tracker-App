@@ -1,0 +1,206 @@
+/* Shared styles for the day View/Edit dialogs (IMPL-FE-09). */
+
+/* ---- View dialog ---- */
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.day-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.day-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-light);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.day-table td {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.day-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.day-table tbody tr:hover {
+  background-color: var(--surface-hover);
+}
+
+.day-table .col-sno {
+  width: 48px;
+  color: var(--text-light);
+}
+
+.day-table .col-price {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-table-muted {
+  color: var(--text-light);
+}
+
+.day-dialog-total {
+  margin-right: auto;
+  font-size: 14px;
+  color: var(--text-light);
+}
+
+.day-dialog-total strong {
+  color: var(--text-color);
+  font-size: 16px;
+}
+
+.day-dialog-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-light);
+}
+
+.day-dialog-empty-hint {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+/* ---- Edit dialog ---- */
+
+.edit-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-header,
+.edit-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1fr) 72px;
+  gap: 8px;
+  align-items: center;
+}
+
+.edit-header {
+  padding: 0 2px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-light);
+}
+
+.edit-row-sno {
+  font-size: 13px;
+  color: var(--text-light);
+  text-align: center;
+}
+
+.edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Desktop uses the shared header row; per-field labels appear on mobile. */
+.edit-field-label {
+  display: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.edit-field input,
+.edit-field select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 14px;
+  background: var(--surface);
+  color: var(--text-color);
+}
+
+.edit-field input:focus,
+.edit-field select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.edit-field [aria-invalid='true'] {
+  border-color: var(--danger-color);
+}
+
+.edit-delete {
+  padding: 6px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--danger-color);
+}
+
+.edit-delete:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--danger-color);
+  background-color: var(--danger-soft);
+}
+
+.edit-row-error {
+  margin: 4px 0 0 36px;
+  font-size: 12px;
+  color: var(--danger-color);
+}
+
+.edit-add {
+  margin-top: 16px;
+}
+
+@media (max-width: 640px) {
+  .edit-header {
+    display: none;
+  }
+
+  .edit-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+  }
+
+  .edit-row-sno {
+    display: none;
+  }
+
+  .edit-field-label {
+    display: block;
+  }
+
+  /* Item name spans the full card width; category/price share a row. */
+  .edit-row .edit-field:first-of-type {
+    grid-column: 1 / -1;
+  }
+
+  .edit-delete {
+    grid-column: 1 / -1;
+    min-height: 44px;
+  }
+
+  .edit-row-error {
+    margin-left: 0;
+  }
+}

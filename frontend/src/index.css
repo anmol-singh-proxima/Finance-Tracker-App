@@ -7,6 +7,20 @@
   --border-color: #e5e7eb;
   --text-color: #1f2937;
   --text-light: #6b7280;
+
+  /* Surfaces & soft accents */
+  --surface: #ffffff;
+  --surface-muted: #f3f4f6;
+  --surface-hover: #f9fafb;
+  --primary-soft: rgba(37, 99, 235, 0.12);
+  --danger-soft: rgba(220, 38, 38, 0.08);
+
+  /* Shape & elevation */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 20px 40px -12px rgba(15, 23, 42, 0.3);
 }
 
 * {
@@ -67,6 +81,24 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
+/* Visible focus indicator for keyboard navigation (WCAG 2.1 AA). */
+button:focus-visible,
+a:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button {
+    transition: none;
+  }
+
+  button:hover {
+    transform: none;
+  }
+}
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -80,6 +112,16 @@ textarea:focus {
 
 .btn-primary:hover {
   background-color: var(--secondary-color);
+}
+
+.btn-secondary {
+  background-color: var(--surface);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background-color: var(--surface-muted);
 }
 
 .btn-danger {
