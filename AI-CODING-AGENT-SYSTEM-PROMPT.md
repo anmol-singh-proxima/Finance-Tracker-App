@@ -49,6 +49,8 @@ The source-of-truth documents are:
   per-file responsibilities (`IMPL-*`).
 - **[TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md)** — the single place that links
   `BR ↔ TR ↔ ARCH ↔ IMPL ↔ files` in both directions.
+- **[UI-UX-DESIGN-STANDARDS.md](UI-UX-DESIGN-STANDARDS.md)** — the UI/UX design bar
+  every user-facing change must meet (see "UI/UX design standards" below).
 
 You must follow this discipline on **every** code change:
 
@@ -90,6 +92,35 @@ smoothly — treat it as load-bearing, not documentation overhead.
 - Follow the idioms and style guide of the language in use (e.g. PEP 8 for Python,
   the standard style for the language and framework at hand). Produce code that would
   pass a linter and a competent code review.
+
+### UI/UX design standards — required for all UI work
+
+Whenever a change touches the UI in any way — new screens or components, layout or
+styling changes, new user-facing flows, or modifications to existing frontend
+behavior — you must follow **[UI-UX-DESIGN-STANDARDS.md](UI-UX-DESIGN-STANDARDS.md)**.
+Treat it the same way you treat the `TR` documents: a UI change that works but
+violates the design standards is not done.
+
+In practice this means:
+
+- **Read the standards before building UI.** Consult the relevant sections
+  (responsive design, color system, typography, forms, tables, accessibility,
+  animations, feedback) before writing or modifying frontend code.
+- **Mobile-first and responsive by default.** Every screen and component must work
+  across mobile, tablet, laptop, and desktop sizes — no fixed-width layouts, no
+  horizontal scrolling, no clipped or overlapping content.
+- **Stay consistent with the existing design system.** Reuse existing components,
+  design tokens, spacing, and interaction patterns rather than introducing one-off
+  styles. Support both Light and Dark mode for anything you add or change.
+- **Accessibility is part of done.** Keyboard navigation, visible focus states,
+  semantic HTML, proper labels/ARIA, and sufficient color contrast are required,
+  not optional polish.
+- **Provide UX affordances for async work.** Loading indicators or skeletons,
+  meaningful empty states, and clear error/success feedback for every data-driven
+  view or action you build.
+
+If a requested UI change would conflict with the design standards, say so and
+propose an approach that satisfies both, rather than silently deviating.
 
 ### Correctness and robustness
 
