@@ -1,0 +1,229 @@
+.categories-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.categories-header h1 {
+  font-size: 28px;
+  color: var(--text-color);
+}
+
+.categories-header .header-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.categories-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.categories-table thead {
+  background-color: var(--surface-muted);
+}
+
+.categories-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.categories-table td {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-color);
+  font-size: 14px;
+}
+
+.categories-table tbody tr:hover {
+  background-color: var(--surface-hover);
+}
+
+.categories-table .is-subcategory {
+  padding-left: 32px;
+  color: var(--text-light);
+}
+
+.categories-table .col-count {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.categories-table .col-actions {
+  width: 200px;
+}
+
+.cell-muted {
+  color: var(--text-light);
+}
+
+.predefined-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background-color: var(--surface-muted);
+  color: var(--text-light);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.type-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.type-pill.type-expense {
+  background-color: var(--primary-soft);
+  color: var(--secondary-color);
+}
+
+.type-pill.type-investment {
+  background-color: var(--success-soft);
+  color: var(--success-text);
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.row-action {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-color);
+}
+
+.row-action:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.row-action-danger {
+  color: var(--danger-color);
+}
+
+.row-action-danger:hover {
+  border-color: var(--danger-color);
+  color: var(--danger-color);
+  background-color: var(--danger-soft-hover);
+}
+
+/* View dialog detail list */
+.category-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.category-details div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.category-details dt {
+  color: var(--text-light);
+  font-size: 13px;
+}
+
+.category-details dd {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Create/edit form dialog */
+.category-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.category-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.category-form label {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-color);
+}
+
+.category-form input,
+.category-form select {
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 14px;
+  background: var(--surface);
+  color: var(--text-color);
+}
+
+.category-form select:disabled {
+  background-color: var(--disabled-bg);
+  color: var(--disabled-text);
+}
+
+.field-hint {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.category-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+  .categories-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .categories-header .header-actions {
+    justify-content: space-between;
+  }
+
+  .categories-table th,
+  .categories-table td {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .categories-table .is-subcategory {
+    padding-left: 20px;
+  }
+}

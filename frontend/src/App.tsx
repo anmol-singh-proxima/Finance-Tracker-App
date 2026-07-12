@@ -2,8 +2,10 @@ import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import './App.css';
+import Footer from './components/Common/Footer';
 import Navigation from './components/Common/Navigation';
 import ProtectedRoute from './components/ProtectedRoute';
+import Categories from './pages/Categories';
 import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
 import Investments from './pages/Investments';
@@ -33,39 +35,52 @@ export default function App() {
     <BrowserRouter>
       <div className="app">
         {isAuthenticated && <Navigation />}
-        <Routes>
-          <Route
-            path="/login"
-            element={
-              isAuthenticated && !initializing ? <Navigate to="/dashboard" replace /> : <Login />
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/expenses"
-            element={
-              <ProtectedRoute>
-                <Expenses />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/investments"
-            element={
-              <ProtectedRoute>
-                <Investments />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+        {/* flex:1 wrapper pushes the footer to the viewport bottom even on
+            short pages (TR-UX-02 sticky footer). */}
+        <main className="app-main">
+          <Routes>
+            <Route
+              path="/login"
+              element={
+                isAuthenticated && !initializing ? <Navigate to="/dashboard" replace /> : <Login />
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/expenses"
+              element={
+                <ProtectedRoute>
+                  <Expenses />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/investments"
+              element={
+                <ProtectedRoute>
+                  <Investments />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/categories"
+              element={
+                <ProtectedRoute>
+                  <Categories />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </main>
+        {isAuthenticated && <Footer />}
       </div>
     </BrowserRouter>
   );

@@ -59,7 +59,22 @@ export interface InvestmentCreateDto {
 export interface CategoryDto {
   id: string;
   name: string;
+  type: 'expense' | 'investment';
+  parent_id: string | null;
   is_predefined: boolean;
+  created_at: string;
+  linked_count: number;
+}
+
+export interface CategoryCreateDto {
+  name: string;
+  type: 'expense' | 'investment';
+  parent_id: string | null;
+}
+
+export interface CategoryUpdateDto {
+  name?: string;
+  parent_id?: string | null;
 }
 
 export interface DashboardSummaryDto {

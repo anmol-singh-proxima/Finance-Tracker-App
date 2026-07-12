@@ -38,7 +38,7 @@ def test_investment_created_by_one_user_is_404_for_another(client: TestClient) -
         "/api/investments",
         json={
             "name": "Index Fund",
-            "type": "etf",
+            "type": "ETF",
             "amount": "1000.00",
             "current_value": "1100.00",
             "purchase_date": "2026-01-01",

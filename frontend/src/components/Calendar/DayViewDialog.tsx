@@ -1,6 +1,6 @@
+import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
 import type { Expense } from '../../types/domain';
 import { formatDayLabel } from '../../utils/calendar';
-import { formatCurrency } from '../../utils/format';
 import Modal from '../Dialogs/Modal';
 import './DayDialogs.css';
 
@@ -17,6 +17,7 @@ interface Props {
 }
 
 export default function DayViewDialog({ date, expenses, onClose, onEdit }: Props) {
+  const formatMoney = useCurrencyFormatter();
   const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   return (
@@ -27,7 +28,7 @@ export default function DayViewDialog({ date, expenses, onClose, onEdit }: Props
       footer={
         <>
           <span className="day-dialog-total">
-            Total: <strong>{formatCurrency(total)}</strong>
+            Total: <strong>{formatMoney(total)}</strong>
           </span>
           <button type="button" className="btn btn-secondary" onClick={onClose}>
             Close
@@ -66,7 +67,7 @@ export default function DayViewDialog({ date, expenses, onClose, onEdit }: Props
                   <td>
                     <span className="category-badge">{expense.category}</span>
                   </td>
-                  <td className="col-price">{formatCurrency(expense.amount)}</td>
+                  <td className="col-price">{formatMoney(expense.amount)}</td>
                 </tr>
               ))}
             </tbody>

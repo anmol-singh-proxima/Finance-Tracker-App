@@ -1,226 +1,358 @@
-# Expense Tracker UI Redesign Prompt
+# Feature Enhancement & UI/UX Improvement Prompt
 
-You are an expert UI/UX designer and senior frontend software engineer with extensive experience building modern, responsive web applications.
-
-The current UI of this Expense Tracker application is functional but does not provide a good user experience. I want you to completely redesign the user interface while keeping usability, scalability, and maintainability as the highest priorities.
-
-## Objective
-
-Replace the existing "one form per day" layout with a modern calendar-based expense management interface similar to the month view found in popular calendar applications (such as Google Calendar or Apple Calendar).
-
-The design should feel modern, clean, responsive, intuitive, and easy to navigate.
+You are an expert full-stack software engineer, database architect, and UI/UX designer. Enhance the existing Expense Tracker application by implementing the following features and architectural improvements. The solution should be production-ready, scalable, maintainable, and follow modern software engineering best practices.
 
 ---
 
-# Calendar Layout
+# 1. Calendar Enhancements
 
-Instead of displaying a form for entering expenses for a single day, create a monthly calendar view.
+## Disable Future Dates
+
+The monthly calendar should not allow users to interact with future dates.
 
 Requirements:
 
-* The user should be able to select any month and year.
-* After selecting a month, display a proper calendar for that month.
-* The calendar must follow the actual calendar layout.
-* Days should align correctly according to the weekday on which the month begins.
-* Display seven columns representing:
+* All future dates must appear visually disabled (grayed out).
+* Disabled dates should not respond to clicks or hover actions.
+* Users should not be able to:
 
-  * Sunday
-  * Monday
-  * Tuesday
-  * Wednesday
-  * Thursday
-  * Friday
-  * Saturday
-* Each week should occupy one row.
-* Empty cells should appear before the first day and after the last day whenever required, just like a real calendar.
+  * Add expenses
+  * Edit expenses
+  * Delete expenses
+  * View empty dialogs for future dates
+* Only the current date and past dates should be interactive.
+
+The disabled state should be visually consistent with the application's design system.
 
 ---
 
-# Calendar Cell Design
+# 2. Global Currency Support
 
-Each day should have its own calendar cell.
+Introduce global currency management.
 
-Each cell should display:
+Requirements:
 
-* Date number
-* Total number of expenses for that day
-* Total amount spent for that day (optional but recommended)
-* A short preview of the first few expenses (optional)
-* Two action buttons:
+* Add a currency selector in the application header (or another prominent global location).
+* Users should be able to choose their preferred currency.
+* The selected currency should automatically be applied throughout the application, including:
 
-  * View
-  * Edit
-
-The design should remain clean and uncluttered even when many expenses exist for a particular day.
-
----
-
-# View Dialog
-
-When the user clicks the **View** button, open a modal/dialog.
-
-The dialog should display every expense recorded for that selected date.
-
-Display the data in a structured table.
-
-Suggested columns:
-
-* S.No
-* Item Name
-* Category
-* Price
-
-The dialog should:
-
-* Be scrollable if many records exist.
-* Have a clean table layout.
-* Include a Close button.
-* Be responsive on different screen sizes.
+  * Expenses
+  * Investments
+  * Reports
+  * Dashboard
+  * Statistics
+  * Calendar
+  * Dialogs
+  * Tables
+  * Charts
+* Store the selected currency so it persists across sessions (e.g., in local storage or user preferences).
+* The application should be designed so that adding more currencies in the future requires minimal changes.
 
 ---
 
-# Edit Dialog
+# 3. Category Management Module
 
-When the user clicks the **Edit** button, open another dialog.
+The application currently lacks proper category management. Create a dedicated **Categories** module.
 
-This dialog should resemble the View dialog but allow full editing.
+Requirements:
 
-Each expense row should contain editable input fields for:
+* Add a new navigation item labeled **Categories**.
+* Design this page with the same layout and styling as the existing Expenses and Investments pages.
+* Display all categories in a structured table.
 
-* Item Name
-* Category
-* Price
+Each category should include:
+
+* Category Name
+* Category Type
+* Parent Category (if applicable)
+* Number of linked records (optional but recommended)
+* Created Date (optional)
+* Actions
+
+Supported actions:
+
+* View
+* Edit
+* Delete
+* Create New Category
+
+---
+
+# 4. Category Types
+
+Each category must belong to one of the following types:
+
+* Expense
+* Investment
+
+The database schema should be updated accordingly.
+
+The application should only display categories relevant to the selected module.
+
+For example:
+
+* Expense pages should only show Expense categories.
+* Investment pages should only show Investment categories.
+
+---
+
+# 5. Category CRUD Operations
+
+Support complete category management.
 
 Users should be able to:
 
-* Click directly into any field to edit it.
-* Modify existing expenses.
-* Add new expense rows.
-* Delete existing expense rows.
-* Save all changes.
-* Cancel without saving changes.
+* Create new categories.
+* View category details.
+* Edit existing categories.
+* Delete categories.
+
+All forms should include proper validation.
 
 ---
 
-# Delete Confirmation
+# 6. Safe Category Deletion
 
-When the user clicks the Delete button for an expense:
+Before deleting a category, perform a dependency check.
 
-* Do not delete immediately.
-* Display a confirmation dialog.
+If the category is currently referenced by any Expense or Investment record:
+
+* Prevent deletion.
+* Display a clear message explaining why deletion is not allowed.
+* Optionally display the number of linked records.
 
 Example:
 
-**Delete Expense?**
+"This category cannot be deleted because it is currently used by existing expense or investment records."
 
-"Are you sure you want to delete this expense?"
+If no linked records exist:
 
-Buttons:
+* Display a confirmation dialog.
+* Delete the category only after user confirmation.
 
-* Cancel
-* Confirm Delete
-
-Delete the expense only after the user confirms.
+Never allow accidental deletion.
 
 ---
 
-# Add New Expense
+# 7. Subcategory Support
 
-Within the Edit dialog, provide an **Add Expense** button.
+Introduce hierarchical categories.
 
-Clicking it should append a new editable row.
+Each category may optionally have a parent category.
 
-Each new row should include:
+Examples:
 
-* Item Name
-* Category
-* Price
+Utilities
 
-The new expense should only be saved after the user clicks **Save Changes**.
+* Electricity Bill
+* Water Bill
+* Internet Bill
+* Wi-Fi Bill
 
----
+Subscriptions
 
-# User Experience Requirements
+* Netflix
+* Amazon Prime
+* Spotify
+* ET Money
 
-The interface should feel polished and modern.
+Food
 
-Requirements include:
+* Breakfast
+* Lunch
+* Dinner
+* Snacks
 
-* Responsive layout for desktop, tablet, and mobile devices.
-* Smooth animations for opening and closing dialogs.
-* Hover effects on buttons.
-* Clear spacing and alignment.
-* Consistent typography.
-* Proper color hierarchy.
-* Rounded corners.
-* Subtle shadows.
-* Accessible color contrast.
-* Keyboard-friendly navigation.
-* Proper focus handling.
+Travel
 
----
+* Flight
+* Train
+* Taxi
+* Hotel
 
-# Suggested UI Components
+Requirements:
 
-Use modern UI components such as:
-
-* Calendar Grid
-* Cards
-* Modal/Dialog
-* Tables
-* Buttons
-* Icons
-* Dropdowns
-* Date Picker
-* Confirmation Dialog
-* Floating Action Button (optional)
+* Parent categories are optional.
+* Unlimited depth is not required; a single parent-child hierarchy is sufficient.
+* Users should be able to create, edit, and delete subcategories.
 
 ---
 
-# Data Handling
+# 8. Expense & Investment Forms
 
-The calendar should dynamically load expense data for the selected month.
+Update all relevant forms.
 
-Each calendar cell should automatically display:
+When selecting a category:
 
-* Expenses belonging to that specific date.
-* Correct totals for that day.
-* Updated information immediately after edits.
+* Display parent categories.
+* Allow selecting either:
 
----
+  * The parent category, or
+  * Any subcategory.
 
-# State Management
+Both options should be treated as valid selections.
 
-Ensure the UI updates automatically after:
-
-* Adding an expense
-* Editing an expense
-* Deleting an expense
-
-There should be no need to manually refresh the page.
+The UI should clearly distinguish parent categories from their child categories (e.g., indentation or grouped dropdowns).
 
 ---
 
-# Performance
+# 9. Database Updates
 
-The solution should be optimized for performance.
+Update the database schema to support:
 
-Avoid unnecessary re-renders and ensure smooth interaction even with a large number of expense records.
+* Category Type
+* Parent Category
+* Foreign key relationships
+* Referential integrity
+* Validation rules
+
+Ensure the schema remains normalized and scalable.
 
 ---
 
-# Code Quality
+# 10. Consistent Page Layout
 
-Produce production-ready code that is:
+Ensure every page follows the same layout structure.
 
-* Clean
-* Modular
-* Well-structured
-* Easy to maintain
-* Reusable
-* Well-commented
+Requirements:
 
-Follow frontend best practices and modern coding standards.
+* Use the Expenses page as the visual reference.
+* Apply consistent:
+
+  * Margins
+  * Padding
+  * Width
+  * Alignment
+  * Content spacing
+  * Card spacing
+  * Table spacing
+
+Every page should feel visually consistent.
+
+---
+
+# 11. Centralized Theme System
+
+The application currently lacks a centralized theming infrastructure.
+
+Create a reusable theme system.
+
+Requirements:
+
+* Define a centralized color palette.
+* Avoid hardcoding colors throughout the application.
+* Use theme variables/tokens instead of individual CSS values.
+
+The theme should define colors for:
+
+* Primary
+* Secondary
+* Accent
+* Background
+* Surface
+* Text
+* Success
+* Warning
+* Error
+* Border
+* Hover
+* Disabled
+* Header
+* Footer
+
+Future color changes should only require updating the theme configuration.
+
+Support future expansion for Light Mode and Dark Mode.
+
+---
+
+# 12. Header Improvements
+
+Improve the application header.
+
+Requirements:
+
+* Add a user/profile icon before the displayed user name.
+* Ensure the icon aligns correctly with the existing header layout.
+* Maintain consistent spacing and responsiveness.
+
+---
+
+# 13. Footer
+
+Create a professional footer.
+
+Requirements:
+
+* Add meaningful placeholder content such as:
+
+  * Application name
+  * Copyright
+  * Version
+  * "Built with ❤️"
+  * Privacy Policy
+  * Terms
+  * Contact (placeholder)
+
+The content can be updated later.
+
+Layout requirements:
+
+* Footer should always remain at the bottom of the viewport.
+* Even when page content is short, the footer should remain fixed to the bottom of the page layout (sticky footer), without overlapping content.
+* Ensure responsiveness across all supported screen sizes.
+
+---
+
+# 14. UI/UX Consistency
+
+Maintain consistency across the application.
+
+Ensure:
+
+* Uniform spacing
+* Consistent typography
+* Consistent icons
+* Consistent dialogs
+* Consistent buttons
+* Reusable components
+* Smooth animations
+* Accessible color contrast
+* Responsive layouts
+* Modern design patterns
+
+---
+
+# 15. Performance
+
+Implement these enhancements without negatively affecting application performance.
+
+The application should remain:
+
+* Fast
+* Responsive
+* Efficient
+* Scalable
+
+Avoid unnecessary re-renders and redundant database queries.
+
+---
+
+# 16. Code Quality
+
+All changes should follow production-quality standards.
+
+Requirements:
+
+* Modular architecture
+* Clean code
+* Reusable components
+* Proper separation of concerns
+* Well-documented code
+* Consistent naming conventions
+* Strong validation
+* Error handling
+* Maintainable database design
 
 ---
 
@@ -228,11 +360,15 @@ Follow frontend best practices and modern coding standards.
 
 Please provide:
 
-1. Updated UI implementation.
-2. Necessary component changes.
-3. State management updates.
-4. Any required backend/API modifications (if applicable).
-5. Explanation of the architecture and design decisions.
-6. Suggestions for future enhancements, such as drag-and-drop support, filters, search, recurring expenses, and analytics.
+1. Updated frontend implementation.
+2. Updated backend/API implementation (if applicable).
+3. Updated database schema and migrations.
+4. Theme infrastructure implementation.
+5. Category management module.
+6. Calendar enhancements.
+7. Currency management implementation.
+8. Footer and header improvements.
+9. Explanation of all architectural changes.
+10. Any additional recommendations that would improve scalability, maintainability, security, or user experience.
 
-The final result should resemble a professional personal finance application rather than a simple expense entry form, with an emphasis on excellent usability, visual clarity, and scalability.
+The final result should resemble a polished, production-ready personal finance application with a modern architecture, intuitive user experience, consistent design language, and room for future expansion.

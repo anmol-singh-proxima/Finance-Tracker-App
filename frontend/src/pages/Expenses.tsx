@@ -7,6 +7,7 @@ import DayEditDialog, { type DayEditChanges } from '../components/Calendar/DayEd
 import DayViewDialog from '../components/Calendar/DayViewDialog';
 import MonthCalendar from '../components/Calendar/MonthCalendar';
 import ExpenseCategoryFilter from '../components/Filters/ExpenseFilters';
+import { useCurrencyFormatter } from '../hooks/useCurrencyFormatter';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import {
   added,
@@ -18,7 +19,6 @@ import {
 } from '../store/slices/expenseSlice';
 import type { Category } from '../types/domain';
 import { MONTH_NAMES, groupExpensesByDate, monthRange, toIsoDate } from '../utils/calendar';
-import { formatCurrency } from '../utils/format';
 import './Expenses.css';
 
 /**
@@ -42,6 +42,7 @@ const YEAR_OPTIONS = Array.from(
 
 export default function Expenses() {
   const dispatch = useAppDispatch();
+  const formatMoney = useCurrencyFormatter();
   const { items, loading, error, totalAmount } = useAppSelector((state) => state.expenses);
 
   const today = todayParts();
@@ -69,7 +70,7 @@ export default function Expenses() {
   }, [dispatch, year, monthIndex, categoryFilter]);
 
   useEffect(() => {
-    listCategories()
+    listCategories('expense')
       .then(setCategories)
       .catch(() => setCategories([]));
   }, []);
@@ -110,9 +111,13 @@ export default function Expenses() {
     setMonthIndex(today.monthIndex);
   };
 
+  // Future dates are not editable (BR-16): quick-add is disabled for months
+  // that lie entirely in the future.
+  const monthIsFuture = monthRange(year, monthIndex).dateFrom > todayIso;
+
   const openQuickAdd = () => {
     // "+ Add Expense" edits today when viewing the current month, otherwise
-    // the first day of the selected month.
+    // the first day of the selected (past) month.
     const isCurrentMonth = year === today.year && monthIndex === today.monthIndex;
     setEditDate(isCurrentMonth ? todayIso : toIsoDate(year, monthIndex, 1));
   };
@@ -161,15 +166,20 @@ export default function Expenses() {
   const monthLabel = `${MONTH_NAMES[monthIndex]} ${year}`;
 
   return (
-    <div className="expenses">
+    <div className="page expenses">
       <div className="expenses-header">
         <h1>Expenses</h1>
         <div className="header-actions">
           <div className="total-amount">
             <span>Total · {monthLabel}</span>
-            <strong>{formatCurrency(totalAmount)}</strong>
+            <strong>{formatMoney(totalAmount)}</strong>
           </div>
-          <button className="btn btn-primary" onClick={openQuickAdd}>
+          <button
+            className="btn btn-primary"
+            onClick={openQuickAdd}
+            disabled={monthIsFuture}
+            title={monthIsFuture ? 'Expenses cannot be added for future dates' : undefined}
+          >
             + Add Expense
           </button>
         </div>

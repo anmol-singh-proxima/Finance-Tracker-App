@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ExpenseInput } from '../../api/expenses';
 import type { Category, Expense } from '../../types/domain';
 import { formatDayLabel } from '../../utils/calendar';
+import { toCategoryOptions } from '../../utils/categoryOptions';
 import ConfirmDialog from '../Dialogs/ConfirmDialog';
 import Modal from '../Dialogs/Modal';
 import './DayDialogs.css';
@@ -234,9 +235,9 @@ export default function DayEditDialog({ date, expenses, categories, onCancel, on
                   onChange={(e) => updateRow(row.key, { category: e.target.value })}
                 >
                   <option value="">Select…</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.name}>
-                      {category.name}
+                  {toCategoryOptions(categories).map((option) => (
+                    <option key={option.id} value={option.name}>
+                      {option.label}
                     </option>
                   ))}
                 </select>

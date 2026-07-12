@@ -1,7 +1,9 @@
 import { type FormEvent, useCallback, useEffect, useState } from 'react';
 
 import { apiErrorMessage } from '../api/client';
+import { listCategories } from '../api/categories';
 import { createInvestment, deleteInvestment, listInvestments } from '../api/investments';
+import { useCurrencyFormatter } from '../hooks/useCurrencyFormatter';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import {
   added,
@@ -10,20 +12,10 @@ import {
   fetchSuccess,
   removed,
 } from '../store/slices/investmentSlice';
-import { formatCurrency, formatDate } from '../utils/format';
+import type { Category } from '../types/domain';
+import { toCategoryOptions } from '../utils/categoryOptions';
+import { formatDate } from '../utils/format';
 import './Investments.css';
-
-// Investment types are free-text on the backend (no fixed table), so the
-// dropdown options stay a frontend concern — matching the original app.
-const INVESTMENT_TYPES = [
-  { value: 'stocks', label: 'Stocks' },
-  { value: 'bonds', label: 'Bonds' },
-  { value: 'mutual-funds', label: 'Mutual Funds' },
-  { value: 'etf', label: 'ETF' },
-  { value: 'crypto', label: 'Cryptocurrency' },
-  { value: 'real-estate', label: 'Real Estate' },
-  { value: 'other', label: 'Other' },
-];
 
 const emptyForm = () => ({
   name: '',
@@ -36,10 +28,12 @@ const emptyForm = () => ({
 
 export default function Investments() {
   const dispatch = useAppDispatch();
+  const formatMoney = useCurrencyFormatter();
   const { items, loading, error, totalInvested, totalReturns } = useAppSelector(
     (state) => state.investments
   );
 
+  const [categories, setCategories] = useState<Category[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState(emptyForm());
   const [formError, setFormError] = useState('');
@@ -57,6 +51,14 @@ export default function Investments() {
   useEffect(() => {
     loadInvestments();
   }, [loadInvestments]);
+
+  // Investment types come from the user's investment categories (BR-18),
+  // parents and subcategories both selectable.
+  useEffect(() => {
+    listCategories('investment')
+      .then(setCategories)
+      .catch(() => setCategories([]));
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -90,24 +92,24 @@ export default function Investments() {
   const returnPercentage = totalInvested > 0 ? (totalReturns / totalInvested) * 100 : 0;
 
   return (
-    <div className="investments">
+    <div className="page investments">
       <div className="investments-header">
         <h1>Investment Tracker</h1>
         <div className="header-actions">
           <div className="investment-stats">
             <div className="stat">
               <span>Total Invested:</span>
-              <strong>{formatCurrency(totalInvested)}</strong>
+              <strong>{formatMoney(totalInvested)}</strong>
             </div>
             <div className="stat">
               <span>Total Returns:</span>
-              <strong style={{ color: totalReturns >= 0 ? '#16a34a' : '#dc2626' }}>
-                {formatCurrency(totalReturns)}
+              <strong className={totalReturns >= 0 ? 'value-gain' : 'value-loss'}>
+                {formatMoney(totalReturns)}
               </strong>
             </div>
             <div className="stat">
               <span>ROI:</span>
-              <strong style={{ color: returnPercentage >= 0 ? '#16a34a' : '#dc2626' }}>
+              <strong className={returnPercentage >= 0 ? 'value-gain' : 'value-loss'}>
                 {returnPercentage.toFixed(2)}%
               </strong>
             </div>
@@ -125,8 +127,9 @@ export default function Investments() {
           <form onSubmit={handleSubmit} className="investment-form">
             {formError && <div className="alert alert-danger">{formError}</div>}
             <div className="form-group">
-              <label>Investment Name</label>
+              <label htmlFor="investment-name">Investment Name</label>
               <input
+                id="investment-name"
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -136,27 +139,30 @@ export default function Investments() {
             </div>
 
             <div className="form-group">
-              <label>Type</label>
+              <label htmlFor="investment-type">Category</label>
               <select
+                id="investment-type"
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                 required
               >
-                <option value="">Select type</option>
-                {INVESTMENT_TYPES.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
+                <option value="">Select a category</option>
+                {toCategoryOptions(categories).map((option) => (
+                  <option key={option.id} value={option.name}>
+                    {option.label}
                   </option>
                 ))}
               </select>
             </div>
 
             <div className="form-group">
-              <label>Initial Amount</label>
+              <label htmlFor="investment-amount">Initial Amount</label>
               <input
+                id="investment-amount"
                 type="number"
                 step="0.01"
                 min="0.01"
+                inputMode="decimal"
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 placeholder="0.00"
@@ -165,11 +171,13 @@ export default function Investments() {
             </div>
 
             <div className="form-group">
-              <label>Current Value</label>
+              <label htmlFor="investment-current-value">Current Value</label>
               <input
+                id="investment-current-value"
                 type="number"
                 step="0.01"
                 min="0"
+                inputMode="decimal"
                 value={formData.currentValue}
                 onChange={(e) => setFormData({ ...formData, currentValue: e.target.value })}
                 placeholder="0.00"
@@ -178,8 +186,9 @@ export default function Investments() {
             </div>
 
             <div className="form-group">
-              <label>Purchase Date</label>
+              <label htmlFor="investment-purchase-date">Purchase Date</label>
               <input
+                id="investment-purchase-date"
                 type="date"
                 value={formData.purchaseDate}
                 onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
@@ -188,8 +197,9 @@ export default function Investments() {
             </div>
 
             <div className="form-group">
-              <label>Notes</label>
+              <label htmlFor="investment-notes">Notes</label>
               <textarea
+                id="investment-notes"
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 placeholder="Add investment notes..."
@@ -210,50 +220,50 @@ export default function Investments() {
         ) : items.length === 0 ? (
           <div className="empty-state">No investments recorded yet</div>
         ) : (
-          <table className="investments-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Purchased</th>
-                <th>Initial Amount</th>
-                <th>Current Value</th>
-                <th>Return</th>
-                <th>ROI</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((investment) => {
-                const returnAmount = investment.currentValue - investment.amount;
-                const roi = investment.amount > 0 ? (returnAmount / investment.amount) * 100 : 0;
-                const gainColor = returnAmount >= 0 ? '#16a34a' : '#dc2626';
-                return (
-                  <tr key={investment.id}>
-                    <td>{investment.name}</td>
-                    <td>
-                      <span className="type-badge">{investment.type}</span>
-                    </td>
-                    <td>{formatDate(investment.purchaseDate)}</td>
-                    <td>{formatCurrency(investment.amount)}</td>
-                    <td>{formatCurrency(investment.currentValue)}</td>
-                    <td style={{ color: gainColor, fontWeight: 600 }}>
-                      {formatCurrency(returnAmount)}
-                    </td>
-                    <td style={{ color: gainColor, fontWeight: 600 }}>{roi.toFixed(2)}%</td>
-                    <td>
-                      <button
-                        className="btn btn-danger"
-                        onClick={() => handleDelete(investment.id)}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="table-scroll">
+            <table className="investments-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Category</th>
+                  <th>Purchased</th>
+                  <th>Initial Amount</th>
+                  <th>Current Value</th>
+                  <th>Return</th>
+                  <th>ROI</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((investment) => {
+                  const returnAmount = investment.currentValue - investment.amount;
+                  const roi = investment.amount > 0 ? (returnAmount / investment.amount) * 100 : 0;
+                  const gainClass = returnAmount >= 0 ? 'value-gain' : 'value-loss';
+                  return (
+                    <tr key={investment.id}>
+                      <td>{investment.name}</td>
+                      <td>
+                        <span className="type-badge">{investment.type}</span>
+                      </td>
+                      <td>{formatDate(investment.purchaseDate)}</td>
+                      <td>{formatMoney(investment.amount)}</td>
+                      <td>{formatMoney(investment.currentValue)}</td>
+                      <td className={gainClass}>{formatMoney(returnAmount)}</td>
+                      <td className={gainClass}>{roi.toFixed(2)}%</td>
+                      <td>
+                        <button
+                          className="btn btn-danger"
+                          onClick={() => handleDelete(investment.id)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

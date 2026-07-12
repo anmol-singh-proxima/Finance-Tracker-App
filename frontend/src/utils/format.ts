@@ -1,13 +1,16 @@
 /** Formatting helpers shared across the UI. */
 
-/** Format a number as USD, e.g. 1234.5 -> "$1,234.50". */
-export function formatCurrency(value: number): string {
-  return value.toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+import { DEFAULT_CURRENCY } from './currencies';
+
+/**
+ * Format a number in the given display currency (BR-17), e.g. 1234.5 ->
+ * "$1,234.50" / "₹1,234.50" / "¥1,235". Fraction digits follow the currency's
+ * Intl defaults (JPY has none). Components should get a bound formatter from
+ * useCurrencyFormatter() rather than calling this directly, so the user's
+ * selected currency is applied.
+ */
+export function formatCurrency(value: number, currency: string = DEFAULT_CURRENCY): string {
+  return value.toLocaleString('en-US', { style: 'currency', currency });
 }
 
 /** Format an ISO date string (YYYY-MM-DD) for display in the user's locale. */

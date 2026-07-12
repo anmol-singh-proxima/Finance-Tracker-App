@@ -1,3 +1,4 @@
+import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
 import {
   WEEKDAY_LABELS,
   formatDayLabel,
@@ -5,13 +6,15 @@ import {
   type CalendarDay,
   type DaySummary,
 } from '../../utils/calendar';
-import { formatCurrency } from '../../utils/format';
 import './MonthCalendar.css';
 
 /**
  * Month-view calendar of expenses (IMPL-FE-09, BR-16). Purely presentational:
  * receives the month's expenses already grouped by day and reports View/Edit
  * intents up to the page, which owns data loading and dialog state.
+ *
+ * Future dates are disabled (BR-16): visually muted, no hover affordance, no
+ * View/Edit actions, and skipped by keyboard navigation.
  *
  * Responsive behavior: on larger screens each day cell shows totals, a short
  * preview, and explicit View/Edit buttons. On small screens the previews and
@@ -33,21 +36,37 @@ function DayCell({
   day,
   summary,
   isToday,
+  isFuture,
   onView,
   onEdit,
 }: {
   day: CalendarDay;
   summary: DaySummary | undefined;
   isToday: boolean;
+  isFuture: boolean;
   onView: (date: string) => void;
   onEdit: (date: string) => void;
 }) {
+  const formatMoney = useCurrencyFormatter();
   const count = summary?.expenses.length ?? 0;
   const dayLabel = formatDayLabel(day.date);
+
+  if (isFuture) {
+    return (
+      <div className="cal-cell is-future" aria-disabled="true">
+        <div className="cal-cell-head">
+          <span className="cal-date" aria-hidden="true">
+            {day.dayOfMonth}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   const summaryLabel =
     count === 0
       ? 'no expenses'
-      : `${count} expense${count === 1 ? '' : 's'}, ${formatCurrency(summary!.total)}`;
+      : `${count} expense${count === 1 ? '' : 's'}, ${formatMoney(summary!.total)}`;
 
   return (
     <div className={`cal-cell${isToday ? ' is-today' : ''}${count > 0 ? ' has-expenses' : ''}`}>
@@ -72,7 +91,7 @@ function DayCell({
 
       {count > 0 && (
         <span className="cal-total" aria-hidden="true">
-          {formatCurrency(summary!.total)}
+          {formatMoney(summary!.total)}
         </span>
       )}
 
@@ -138,6 +157,7 @@ export default function MonthCalendar({
                 day={cell}
                 summary={byDate.get(cell.date)}
                 isToday={cell.date === todayIso}
+                isFuture={cell.date > todayIso}
                 onView={onView}
                 onEdit={onEdit}
               />

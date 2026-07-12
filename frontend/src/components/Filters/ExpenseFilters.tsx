@@ -1,4 +1,5 @@
 import type { Category } from '../../types/domain';
+import { toCategoryOptions } from '../../utils/categoryOptions';
 import './Filters.css';
 
 /**
@@ -23,9 +24,9 @@ export default function ExpenseCategoryFilter({ categories, value, onChange }: P
         onChange={(e) => onChange(e.target.value || undefined)}
       >
         <option value="">All categories</option>
-        {categories.map((category) => (
-          <option key={category.id} value={category.name}>
-            {category.name}
+        {toCategoryOptions(categories).map((option) => (
+          <option key={option.id} value={option.name}>
+            {option.label}
           </option>
         ))}
       </select>

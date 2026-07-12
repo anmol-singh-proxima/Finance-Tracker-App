@@ -46,6 +46,12 @@ def db_session() -> Generator[Session, None, None]:
         session.execute(
             text("TRUNCATE expenses, investments, auth_sessions, users RESTART IDENTITY CASCADE")
         )
+        # Children before parents: the self-referencing parent_id FK is
+        # ON DELETE RESTRICT, so a single unordered DELETE could hit a parent
+        # row while its subcategory still references it.
+        session.execute(
+            text("DELETE FROM categories WHERE is_predefined = false AND parent_id IS NOT NULL")
+        )
         session.execute(text("DELETE FROM categories WHERE is_predefined = false"))
         session.commit()
         session.close()

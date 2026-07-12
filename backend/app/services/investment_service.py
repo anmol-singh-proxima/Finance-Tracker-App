@@ -1,15 +1,18 @@
-"""Investment business logic — no category linkage (investments use free-text
-`type`, matching current app behavior — see IMPLEMENTATION-PLAN.md note near
-IMPL-BE-07). Same 404-not-403 discipline as expense_service.py (BR-13)."""
+"""Investment business logic. Since BR-18, `type` must name an investment
+category (predefined or the caller's own) — the by-string reference mirrors
+how expenses reference expense categories (see IMPLEMENTATION-PLAN.md note
+near IMPL-BE-07/11). Same 404-not-403 discipline as expense_service.py
+(BR-13)."""
 
 import uuid
 from datetime import date
 
 from sqlalchemy.orm import Session
 
-from app.core.errors import NotFoundError
+from app.core.errors import NotFoundError, UnprocessableEntityError
+from app.models.category import INVESTMENT_TYPE
 from app.models.investment import Investment
-from app.repositories import investment_repo
+from app.repositories import category_repo, investment_repo
 from app.schemas.common import Page
 from app.schemas.investment import InvestmentCreate, InvestmentRead, InvestmentUpdate
 
@@ -49,7 +52,13 @@ def get_investment(db: Session, user_id: str, investment_id: uuid.UUID) -> Inves
     return _to_read(investment)
 
 
+def _require_valid_type(db: Session, user_id: str, type_: str) -> None:
+    if not category_repo.is_valid_category_for_user(db, user_id, type_, INVESTMENT_TYPE):
+        raise UnprocessableEntityError(f"Unknown investment category: {type_!r}")
+
+
 def create_investment(db: Session, user_id: str, data: InvestmentCreate) -> InvestmentRead:
+    _require_valid_type(db, user_id, data.type)
     investment = investment_repo.create_investment(db, user_id, data)
     return _to_read(investment)
 
@@ -57,6 +66,8 @@ def create_investment(db: Session, user_id: str, data: InvestmentCreate) -> Inve
 def update_investment(
     db: Session, user_id: str, investment_id: uuid.UUID, data: InvestmentUpdate
 ) -> InvestmentRead:
+    if data.type is not None:
+        _require_valid_type(db, user_id, data.type)
     investment = investment_repo.update_investment(db, user_id, investment_id, data)
     if investment is None:
         raise NotFoundError("Investment not found")

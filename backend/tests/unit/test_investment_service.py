@@ -11,7 +11,7 @@ from typing import Any, cast
 import pytest
 from sqlalchemy.orm import Session
 
-from app.core.errors import NotFoundError
+from app.core.errors import NotFoundError, UnprocessableEntityError
 from app.schemas.investment import InvestmentCreate, InvestmentUpdate
 from app.services import investment_service
 
@@ -82,10 +82,23 @@ class _FakeInvestmentRepo:
 USER = "svc-test-user"
 
 
+class _FakeCategoryRepo:
+    """Stub for the BR-18 investment-category validation; the real check is
+    covered by the integration suite against the seeded categories."""
+
+    def __init__(self, valid: bool = True) -> None:
+        self.valid = valid
+
+    def is_valid_category_for_user(
+        self, db: Any, user_id: str, name: str, type_: str = "expense"
+    ) -> bool:
+        return self.valid
+
+
 def _make_data(**overrides: object) -> InvestmentCreate:
     defaults: dict[str, object] = {
         "name": "Index Fund",
-        "type": "etf",
+        "type": "ETF",
         "amount": Decimal("1000"),
         "current_value": Decimal("1100"),
         "purchase_date": date(2026, 1, 1),
@@ -98,7 +111,16 @@ def _make_data(**overrides: object) -> InvestmentCreate:
 def fake_investment_repo(monkeypatch: pytest.MonkeyPatch) -> _FakeInvestmentRepo:
     fake = _FakeInvestmentRepo()
     monkeypatch.setattr(investment_service, "investment_repo", fake)
+    monkeypatch.setattr(investment_service, "category_repo", _FakeCategoryRepo())
     return fake
+
+
+def test_create_with_unknown_category_raises(
+    fake_investment_repo: _FakeInvestmentRepo, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(investment_service, "category_repo", _FakeCategoryRepo(valid=False))
+    with pytest.raises(UnprocessableEntityError):
+        investment_service.create_investment(db=FAKE_DB, user_id=USER, data=_make_data())
 
 
 def test_create_investment(fake_investment_repo: _FakeInvestmentRepo) -> None:

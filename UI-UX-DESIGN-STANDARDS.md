@@ -60,6 +60,7 @@ The application must follow modern UI/UX best practices and deliver a premium us
 * Default the theme to the user's system preference (`prefers-color-scheme`) and persist their explicit choice.
 * Ensure colors meet accessibility guidelines for contrast and readability.
 * Use color intentionally to communicate status, actions, and hierarchy — never as the only means of conveying information.
+* Style disabled elements with the theme's dedicated disabled colors: visually muted, non-interactive (no hover/click affordances), and exposed to assistive technology via the `disabled` attribute or `aria-disabled`.
 
 ## Animations & Micro-Interactions
 

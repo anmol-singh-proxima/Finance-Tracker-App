@@ -70,7 +70,9 @@ Section numbers below are the current `ARCHITECTURE.md` sections
 | **BR-13** | Strict data privacy | ARCH-06/07/09 | IMPL-BE-03, IMPL-BE-04/05 | `api/deps.py`, repositories (scoped to the authenticated user id) |
 | **BR-14** | Export data *(Could)* | ARCH-07 | IMPL-BE-04/05 | export endpoint (later) |
 | **BR-15** | Web, multi-device access | ARCH-01/02/04 | IMPL-FE-02, IMPL-INF-02/03 | SPA + edge hosting |
-| **BR-16** | Calendar-based expense management | ARCH-04/05/07 | IMPL-FE-09, IMPL-FE-03, IMPL-BE-04 | `frontend/src/components/Calendar/`, `components/Dialogs/`, `utils/calendar.ts`, `pages/Expenses.tsx` (reuses the existing expense endpoints) |
+| **BR-16** | Calendar-based expense management (future dates disabled) | ARCH-04/05/07 | IMPL-FE-09, IMPL-FE-03, IMPL-BE-04 | `frontend/src/components/Calendar/`, `components/Dialogs/`, `utils/calendar.ts`, `pages/Expenses.tsx` (reuses the existing expense endpoints) |
+| **BR-17** | Global currency preference | ARCH-04 | IMPL-FE-11, IMPL-FE-12 | `frontend/src/utils/currencies.ts`, `store/slices/settingsSlice.ts`, `hooks/useCurrencyFormatter.ts`, header selector in `components/Common/Navigation.tsx` |
+| **BR-18** | Category management (types, hierarchy, safe delete) | ARCH-05/07/09 | IMPL-FE-10, IMPL-BE-11, IMPL-BE-07 | `frontend/src/pages/Categories.tsx`, `backend/app/api/routers/categories.py`, `services/category_service.py`, `repositories/category_repo.py`, migration `0003` |
 | **BR-NF-01** | Trustworthy with money data | ARCH-09/10/12 | IMPL-BE-07/08, IMPL-INF-06 | see TR-SEC / TR-REL rows below |
 | **BR-NF-02** | Fast & responsive | ARCH-02/08 | IMPL-FE-06, IMPL-BE-06/08 | see TR-PERF rows below |
 | **BR-NF-03** | Always available | ARCH-09/12 | IMPL-INF-01/06 | see TR-REL rows below |
@@ -117,6 +119,8 @@ Section numbers below are the current `ARCHITECTURE.md` sections
 | **TR-CQ-06** | CI gates merges | ARCH-14 | IMPL-CI-01 | CI required checks |
 | **TR-CQ-07** | Self-documenting + docstrings | ARCH-07 | all IMPL | review |
 | **TR-CQ-08** | 12-Factor | ARCH-07/10/13 | IMPL-BE-02, IMPL-INF-* | review |
+| **TR-UX-01** | Centralized theme tokens; no hardcoded colors | ARCH-04 | IMPL-FE-12, all IMPL-FE | grep for color literals outside `index.css`/`charts/palette.ts` |
+| **TR-UX-02** | Consistent page shell (header/footer/container) | ARCH-04 | IMPL-FE-12 | pages use the shared `.page` container |
 | **TR-OBS-01** | Structured logging + correlation id | ARCH-11 | IMPL-BE-10 | log format check |
 | **TR-OBS-02** | Metrics + alarms | ARCH-11 | IMPL-INF-07 | alarms present |
 | **TR-OBS-03** | Distributed tracing | ARCH-11 | IMPL-INF-07, IMPL-BE-01 | traces present |
@@ -146,18 +150,21 @@ Use this to answer "what does this file serve?" before changing it. *All units b
 | IMPL-FE-06 | `frontend/src/charts/` | BR-08/09, TR-PERF-02 | **Implemented (Phase 2)** |
 | IMPL-FE-07 | `frontend/src/components/Filters/` | BR-10 | **Implemented (Phase 5)** — category filter for the expense calendar; the date-range dimension is realised by the calendar's month navigation (IMPL-FE-09) |
 | IMPL-FE-08 | `frontend/src/store/` | BR-* state | **Implemented (Phase 2)** |
-| IMPL-FE-09 | `frontend/src/components/Calendar/` (`MonthCalendar`, `DayViewDialog`, `DayEditDialog`), `components/Dialogs/` (`Modal`, `ConfirmDialog`), `utils/calendar.ts` | BR-16, BR-02/05/11 | **Implemented (Phase 5)** — month-grid calendar UI + accessible dialogs; calendar math unit-tested (`utils/calendar.test.ts`) |
+| IMPL-FE-09 | `frontend/src/components/Calendar/` (`MonthCalendar`, `DayViewDialog`, `DayEditDialog`), `components/Dialogs/` (`Modal`, `ConfirmDialog`), `utils/calendar.ts` | BR-16, BR-02/05/11 | **Implemented (Phase 5)** — month-grid calendar UI + accessible dialogs; future dates disabled; calendar math unit-tested (`utils/calendar.test.ts`) |
+| IMPL-FE-10 | `frontend/src/pages/Categories.tsx` (+ `Categories.css`, `utils/categoryOptions.ts`) | BR-18, BR-03 | **Implemented (Phase 5)** — typed table with hierarchy, CRUD dialogs, safe-delete UX |
+| IMPL-FE-11 | `frontend/src/utils/currencies.ts`, `store/slices/settingsSlice.ts`, `hooks/useCurrencyFormatter.ts` | BR-17 | **Implemented (Phase 5)** — display currency, persisted; formatter hook used by all money renders |
+| IMPL-FE-12 | `frontend/src/index.css` (tokens), `charts/palette.ts`, `components/Common/Navigation.tsx`, `components/Common/Footer.tsx`, shared `.page` container | TR-UX-01/02, BR-15/17 | **Implemented (Phase 5)** — theme tokens, header (user icon + currency), sticky footer, uniform page shell |
 | IMPL-BE-01 | `backend/app/main.py` | ARCH-07, TR-REL-02, TR-PERF-06 | **Implemented (Phase 1)** |
 | IMPL-BE-02 | `backend/app/core/config.py` | TR-SEC-03, TR-CQ-08, TR-ENV-02/03 | **Implemented** — separate `DB_*` vars → `database_url`; `auth_provider` with fail-closed Cognito validation |
 | IMPL-BE-03 | `backend/app/core/security.py`, `backend/app/api/deps.py` | TR-SEC-01/01L/02, BR-13, TR-DAT-01 | **Implemented** — `get_current_user_id` branches on `AUTH_PROVIDER`: Cognito JWKS verification, or local opaque-token resolution |
 | IMPL-BE-04 | `backend/app/api/routers/expenses.py`, `services/expense_service.py`, `repositories/expense_repo.py` | BR-02/03/05/10/11, TR-PERF-04 | **Implemented (Phase 1)** |
-| IMPL-BE-05 | `backend/app/api/routers/investments.py`, `services/investment_service.py`, `repositories/investment_repo.py` | BR-04/06/11 | **Implemented (Phase 1)** |
+| IMPL-BE-05 | `backend/app/api/routers/investments.py`, `services/investment_service.py`, `repositories/investment_repo.py` | BR-04/06/11, BR-18 | **Implemented (Phase 5)** — `type` validated against investment categories |
 | IMPL-BE-06 | `backend/app/api/routers/dashboard.py`, `services/analytics_service.py` | BR-07/08/09, TR-PERF-03/05 | **Implemented (Phase 1)** |
-| IMPL-BE-07 | `backend/app/models/` (expense, investment, category, user, auth_session), `backend/app/db/migrations/` | ARCH-09, TR-DAT-03 | **Implemented** — `users`/`auth_sessions` added for the local auth provider (migration `0002`) |
+| IMPL-BE-07 | `backend/app/models/` (expense, investment, category, user, auth_session), `backend/app/db/migrations/` | ARCH-09, TR-DAT-03, BR-18 | **Implemented** — `users`/`auth_sessions` for local auth (migration `0002`); category `type`/`parent_id` + investment-category seeds + legacy `investments.type` normalisation (migration `0003`) |
 | IMPL-BE-08 | `backend/app/db/session.py` | ARCH-08, TR-PERF-03, TR-REL-06 | **Implemented (Phase 1)** |
 | IMPL-BE-09 | `backend/app/schemas/` | TR-SEC-04, TR-PERF-04 | **Implemented (Phase 1)** |
 | IMPL-BE-10 | `backend/app/core/logging.py`, `backend/app/core/errors.py` | TR-OBS-01, TR-REL-02, TR-SEC-10/13 | **Implemented (Phase 1)** |
-| IMPL-BE-11 | `backend/app/api/routers/categories.py`, `services/category_service.py` | BR-03/12 | **Implemented (Phase 1)** — categories only; Budget/BR-12 sub-scope remains out of scope |
+| IMPL-BE-11 | `backend/app/api/routers/categories.py`, `services/category_service.py`, `repositories/category_repo.py` | BR-03/18, BR-12 | **Implemented (Phase 5)** — typed CRUD, single-level hierarchy, linked-record counts, safe deletion; Budget/BR-12 sub-scope remains out of scope |
 | IMPL-BE-12 | `backend/app/api/routers/auth.py`, `services/local_auth_service.py`, `core/passwords.py`, `core/rate_limit.py`, `models/user.py`, `models/auth_session.py`, `schemas/auth.py` | BR-01, TR-SEC-01L, TR-ENV-01 | **Implemented (local profile)** |
 | IMPL-INF-01 | `infrastructure/lib/network-stack.ts` | ARCH-12, TR-SEC-09, TR-REL-04 | **Implemented (Phase 3)** — CDK, `cdk synth`-verified |
 | IMPL-INF-02 | `infrastructure/lib/edge-stack.ts` | ARCH-01/02/03, TR-SEC-06/07/08, TR-PERF-01 | **Implemented (Phase 3)** — also hosts INF-03 (see note) |

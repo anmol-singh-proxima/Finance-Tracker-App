@@ -22,10 +22,24 @@ export interface Investment {
   notes: string | null;
 }
 
+export type CategoryType = 'expense' | 'investment';
+
 export interface Category {
   id: string;
   name: string;
+  type: CategoryType;
+  /** One level of hierarchy only (BR-18): a parent never has a parent itself. */
+  parentId: string | null;
   isPredefined: boolean;
+  createdAt: string;
+  /** How many of the user's records reference this category (BR-18 safe delete). */
+  linkedRecords: number;
+}
+
+export interface CategoryInput {
+  name: string;
+  type: CategoryType;
+  parentId: string | null;
 }
 
 export interface DashboardSummary {

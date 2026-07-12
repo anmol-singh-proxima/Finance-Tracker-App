@@ -1,12 +1,3 @@
-.expenses {
-  flex: 1;
-  padding: 24px;
-  background-color: var(--surface-hover);
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
-}
-
 .expenses-header {
   display: flex;
   justify-content: space-between;
@@ -183,27 +174,9 @@
   color: var(--text-color);
 }
 
-/* ---- Utilities ---- */
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 /* ---- Responsive ---- */
 
 @media (max-width: 768px) {
-  .expenses {
-    padding: 16px;
-  }
-
   .expenses-header {
     flex-direction: column;
     align-items: stretch;

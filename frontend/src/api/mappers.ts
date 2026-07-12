@@ -46,7 +46,15 @@ export function toInvestment(dto: InvestmentDto): Investment {
 }
 
 export function toCategory(dto: CategoryDto): Category {
-  return { id: dto.id, name: dto.name, isPredefined: dto.is_predefined };
+  return {
+    id: dto.id,
+    name: dto.name,
+    type: dto.type,
+    parentId: dto.parent_id,
+    isPredefined: dto.is_predefined,
+    createdAt: dto.created_at,
+    linkedRecords: dto.linked_count,
+  };
 }
 
 export function toDashboardSummary(dto: DashboardSummaryDto): DashboardSummary {

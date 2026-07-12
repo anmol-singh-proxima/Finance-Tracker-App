@@ -1,16 +1,16 @@
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
+import { useCurrencyFormatter } from '../hooks/useCurrencyFormatter';
 import type { CategoryBreakdownItem } from '../types/domain';
-import { formatCurrency } from '../utils/format';
-
-// A small fixed palette; categories cycle through it.
-const COLORS = ['#2563eb', '#16a34a', '#f59e0b', '#dc2626', '#7c3aed', '#0891b2', '#db2777'];
+import { CHART_SERIES } from './palette';
 
 /**
  * Category-wise spending breakdown for the current period (BR-09) — shows which
  * categories consume the most money. Aggregated server-side.
  */
 export default function CategoryBreakdownChart({ items }: { items: CategoryBreakdownItem[] }) {
+  const formatMoney = useCurrencyFormatter();
+
   if (items.length === 0) {
     return <p className="empty-state">No spending in this period yet.</p>;
   }
@@ -20,10 +20,10 @@ export default function CategoryBreakdownChart({ items }: { items: CategoryBreak
       <PieChart>
         <Pie data={items} dataKey="total" nameKey="category" outerRadius={100} label>
           {items.map((item, index) => (
-            <Cell key={item.category} fill={COLORS[index % COLORS.length]} />
+            <Cell key={item.category} fill={CHART_SERIES[index % CHART_SERIES.length]} />
           ))}
         </Pie>
-        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+        <Tooltip formatter={(value: number) => formatMoney(value)} />
         <Legend />
       </PieChart>
     </ResponsiveContainer>

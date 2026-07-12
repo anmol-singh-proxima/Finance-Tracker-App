@@ -98,6 +98,15 @@ profile-scoped and tagged **[Local profile]** or **[Staging/Prod profile]**.
 
 ---
 
+## 4a. UI / Frontend Standards
+
+| ID | Requirement | Verification |
+|----|-------------|--------------|
+| **TR-UX-01** | **Centralized theme tokens.** All UI colors, radii, and elevation come from the central design-token set (CSS custom properties in `frontend/src/index.css`); component styles and JSX contain **no hardcoded color literals**. The token set covers primary/secondary/accent, background/surface, text, success/warning/error, border, hover, and disabled states, so a future Light/Dark theme (and any palette change) is a token-level change only. UI follows [UI-UX-DESIGN-STANDARDS.md](UI-UX-DESIGN-STANDARDS.md). | Grep: no hex/rgb color literals in `src/**/*.{tsx,css}` outside the token definitions; review against the design standards. |
+| **TR-UX-02** | **Consistent page shell.** Every routed page uses the shared layout shell (sticky header, sticky footer pinned to the viewport bottom, and the shared content container with common max-width/spacing), so margins, padding, and alignment are uniform across pages. | Visual review; pages use the shared container class rather than bespoke widths. |
+
+---
+
 ## 5. Observability
 
 | ID | Requirement | Verification |

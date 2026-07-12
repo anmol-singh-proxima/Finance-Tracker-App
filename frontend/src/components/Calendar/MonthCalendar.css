@@ -49,13 +49,22 @@
   background-color: var(--surface-muted);
 }
 
-.cal-cell:not(.is-blank):hover {
+/* Future dates are visible but disabled (BR-16): muted, no hover, no actions. */
+.cal-cell.is-future {
+  background-color: var(--disabled-bg);
+}
+
+.cal-cell.is-future .cal-date {
+  color: var(--disabled-text);
+}
+
+.cal-cell:not(.is-blank):not(.is-future):hover {
   background-color: var(--surface-hover);
 }
 
 .cal-cell.is-today .cal-date {
   background-color: var(--primary-color);
-  color: #fff;
+  color: var(--surface);
 }
 
 .cal-cell-head {

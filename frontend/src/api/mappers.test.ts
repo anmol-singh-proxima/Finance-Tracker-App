@@ -39,9 +39,25 @@ describe('DTO → domain mappers', () => {
     expect(investment.notes).toBeNull();
   });
 
-  it('maps category is_predefined to isPredefined', () => {
-    const dto: CategoryDto = { id: 'c1', name: 'Food & Dining', is_predefined: true };
-    expect(toCategory(dto)).toEqual({ id: 'c1', name: 'Food & Dining', isPredefined: true });
+  it('maps category snake_case fields to camelCase', () => {
+    const dto: CategoryDto = {
+      id: 'c1',
+      name: 'Food & Dining',
+      type: 'expense',
+      parent_id: null,
+      is_predefined: true,
+      created_at: '2026-07-01T00:00:00Z',
+      linked_count: 2,
+    };
+    expect(toCategory(dto)).toEqual({
+      id: 'c1',
+      name: 'Food & Dining',
+      type: 'expense',
+      parentId: null,
+      isPredefined: true,
+      createdAt: '2026-07-01T00:00:00Z',
+      linkedRecords: 2,
+    });
   });
 
   it('maps every dashboard summary field to a number', () => {

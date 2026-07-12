@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 def _create_investment(client: TestClient, **overrides: Any) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "name": "Index Fund",
-        "type": "etf",
+        "type": "ETF",
         "amount": "1000.00",
         "current_value": "1100.00",
         "purchase_date": "2026-01-01",
@@ -39,12 +39,12 @@ def test_get_nonexistent_investment_returns_404(client: TestClient) -> None:
 
 
 def test_list_investments_filters_by_type(client: TestClient) -> None:
-    _create_investment(client, type="etf")
-    _create_investment(client, type="crypto")
-    response = client.get("/api/investments", params={"type": "crypto"})
+    _create_investment(client, type="ETF")
+    _create_investment(client, type="Cryptocurrency")
+    response = client.get("/api/investments", params={"type": "Cryptocurrency"})
     body = response.json()
     assert body["total"] == 1
-    assert body["items"][0]["type"] == "crypto"
+    assert body["items"][0]["type"] == "Cryptocurrency"
 
 
 def test_partial_update_only_changes_given_field(client: TestClient) -> None:
@@ -80,7 +80,7 @@ def test_create_with_zero_amount_is_rejected(client: TestClient) -> None:
         "/api/investments",
         json={
             "name": "X",
-            "type": "etf",
+            "type": "ETF",
             "amount": "0",
             "current_value": "0",
             "purchase_date": "2026-01-01",
@@ -94,7 +94,7 @@ def test_create_with_negative_current_value_is_rejected(client: TestClient) -> N
         "/api/investments",
         json={
             "name": "X",
-            "type": "etf",
+            "type": "ETF",
             "amount": "100",
             "current_value": "-1",
             "purchase_date": "2026-01-01",
